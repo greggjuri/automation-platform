@@ -7,7 +7,7 @@
 
 | Task | Status | Assignee | Started | Notes |
 |------|--------|----------|---------|-------|
-| Create project scaffolding | 🟡 In Progress | Claude Code | 2025-01-XX | Setting up directory structure |
+| _None currently_ | | | | |
 
 ## Backlog (Prioritized)
 
@@ -53,7 +53,8 @@
 | Task | Completed | Notes |
 |------|-----------|-------|
 | Architecture design | 2025-01-XX | Documented in PLANNING.md |
-| Context engineering setup | 2025-01-XX | CLAUDE.md, PLANNING.md, TASK.md created |
+| Create project scaffolding | 2025-12-12 | Directory structure, initial docs |
+| Context engineering setup | 2025-12-12 | Slash commands, PRP template, examples folder |
 
 ## Blockers
 
