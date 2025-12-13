@@ -9,10 +9,30 @@
 
 ## Critical First Steps
 
+**IMPORTANT: Read and update documentation religiously.**
+
 1. **Always read `docs/PLANNING.md`** at the start of a new conversation to understand architecture, goals, and constraints
 2. **Check `docs/TASK.md`** before starting any work - if your task isn't listed, add it with description and date
 3. **Review `docs/DECISIONS.md`** for past architecture decisions before proposing alternatives
 4. **Check relevant PRPs** in `PRPs/` folder for detailed implementation specs
+5. **After completing work**, update TASK.md, commit, and push before ending the session
+
+## Before Starting Any Task
+
+- [ ] Read PLANNING.md for architecture context
+- [ ] Check TASK.md - is this task listed? Add if not
+- [ ] Check DECISIONS.md - any relevant past decisions?
+- [ ] Check PRPs/ - is there a PRP for this?
+- [ ] Check examples/ - any patterns to follow?
+
+## After Completing Any Task
+
+- [ ] Update TASK.md with completion status
+- [ ] Update DECISIONS.md if you made architecture choices
+- [ ] Add/update tests
+- [ ] Run linter and fix issues
+- [ ] Commit with conventional commit message
+- [ ] Push to remote
 
 ## Project Constraints
 
@@ -158,9 +178,50 @@ def create_workflow(name: str, trigger: TriggerConfig, steps: list[StepConfig]) 
 
 ## Git Workflow
 
-- **Branch naming:** `feature/short-description`, `fix/issue-description`
-- **Commit messages:** Conventional commits (`feat:`, `fix:`, `docs:`, `refactor:`)
-- **PR requirements:** Tests pass, no lint errors, docs updated
+**IMPORTANT: Commit and push frequently.**
+
+### When to Commit
+After completing ANY of the following, commit and push immediately:
+- New feature or functionality
+- Bug fix (no matter how small)
+- New file or directory structure
+- Configuration changes
+- Test additions or modifications
+- Documentation updates
+
+**Never leave work uncommitted at the end of a session.**
+
+### Branch Naming
+- `feature/short-description` - New functionality
+- `fix/issue-description` - Bug fixes
+- `refactor/what-changed` - Code improvements
+- `docs/what-updated` - Documentation only
+
+### Commit Message Format (Conventional Commits)
+```
+feat: add workflow CRUD API
+fix: handle DynamoDB reserved word aliasing
+docs: update TASK.md with completed items
+refactor: split handler into modules
+test: add unit tests for transform action
+chore: update dependencies
+```
+
+### Documentation Updates Required
+**With every code change, update relevant docs:**
+- `docs/TASK.md` - Mark tasks in progress or complete
+- `docs/DECISIONS.md` - Record any architecture choices made
+- `docs/PLANNING.md` - If architecture evolves beyond original plan
+- `README.md` - When adding features or changing setup
+- Code docstrings - For all new functions/classes
+
+**Never let documentation drift from implementation.**
+
+### PR Requirements
+- All tests pass
+- No lint errors (ruff, eslint)
+- Documentation updated
+- Commit messages follow convention
 
 ## Environment Setup
 

@@ -12,12 +12,12 @@
 ## Backlog (Prioritized)
 
 ### Phase 1: Foundation
-- [ ] Initialize CDK project with Python
-- [ ] Create shared_stack.py (IAM roles, SSM paths)
-- [ ] Create database_stack.py (DynamoDB tables)
+- [x] Initialize CDK project with Python
+- [x] Create shared_stack.py (IAM roles, SSM paths)
+- [x] Create database_stack.py (DynamoDB tables)
 - [ ] Create api_stack.py (API Gateway + Lambda)
 - [ ] Implement workflow CRUD in API Lambda
-- [ ] Initialize React frontend with Vite + TypeScript
+- [x] Initialize React frontend with Vite + TypeScript
 - [ ] Create workflow list page
 - [ ] Create workflow create/edit form
 - [ ] Deploy and test end-to-end
@@ -55,6 +55,7 @@
 | Architecture design | 2025-01-XX | Documented in PLANNING.md |
 | Create project scaffolding | 2025-12-12 | Directory structure, initial docs |
 | Context engineering setup | 2025-12-12 | Slash commands, PRP template, examples folder |
+| PRP-001: Project Foundation | 2025-12-12 | CDK stacks, DynamoDB tables, Lambda dirs, Frontend init |
 
 ## Blockers
 
