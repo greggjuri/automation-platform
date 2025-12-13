@@ -15,8 +15,8 @@
 - [x] Initialize CDK project with Python
 - [x] Create shared_stack.py (IAM roles, SSM paths)
 - [x] Create database_stack.py (DynamoDB tables)
-- [ ] Create api_stack.py (API Gateway + Lambda)
-- [ ] Implement workflow CRUD in API Lambda
+- [x] Create api_stack.py (API Gateway + Lambda)
+- [x] Implement workflow CRUD in API Lambda
 - [x] Initialize React frontend with Vite + TypeScript
 - [ ] Create workflow list page
 - [ ] Create workflow create/edit form
@@ -56,6 +56,7 @@
 | Create project scaffolding | 2025-12-12 | Directory structure, initial docs |
 | Context engineering setup | 2025-12-12 | Slash commands, PRP template, examples folder |
 | PRP-001: Project Foundation | 2025-12-12 | CDK stacks, DynamoDB tables, Lambda dirs, Frontend init |
+| PRP-002: API Gateway + Workflow CRUD | 2025-12-12 | HTTP API, Lambda handler with Powertools, full CRUD ops, 19 unit tests |
 
 ## Blockers
 

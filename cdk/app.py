@@ -9,6 +9,7 @@ import os
 
 import aws_cdk as cdk
 
+from stacks.api_stack import ApiStack
 from stacks.database_stack import DatabaseStack
 from stacks.shared_stack import SharedStack
 
@@ -37,6 +38,15 @@ shared_stack = SharedStack(
 database_stack = DatabaseStack(
     app,
     f"{stack_prefix}-database",
+    environment=environment,
+    env=env,
+)
+
+# API Gateway and Lambda
+api_stack = ApiStack(
+    app,
+    f"{stack_prefix}-api",
+    workflows_table=database_stack.workflows_table,
     environment=environment,
     env=env,
 )

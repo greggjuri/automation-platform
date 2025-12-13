@@ -1,0 +1,12 @@
+# Development dependencies for Lambda testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+ruff>=0.1.0
+moto>=4.0.0
+boto3-stubs[dynamodb]>=1.34.0
+aws-xray-sdk>=2.0.0
+
+# Lambda dependencies (for local testing)
+aws-lambda-powertools>=2.0.0
+pydantic>=2.0.0
+boto3>=1.34.0
