@@ -218,6 +218,35 @@ Start with form-based creation for MVP.
 
 ---
 
+## ADR-008: aws-xray-sdk as Explicit Lambda Dependency
+
+**Date:** 2025-12-12
+**Status:** Accepted
+
+### Context
+When using AWS Lambda Powertools Tracer, the Lambda function failed to deploy/run because `aws-xray-sdk` was not available in the Lambda runtime.
+
+### Options Considered
+1. **Add aws-xray-sdk to requirements.txt** - Explicit dependency bundled with Lambda
+2. **Use Lambda Layer** - Powertools provides a layer with all dependencies
+3. **Disable tracing** - Remove Tracer usage entirely
+
+### Decision
+Add `aws-xray-sdk>=2.0.0` explicitly to each Lambda's `requirements.txt`.
+
+### Rationale
+- Powertools Tracer requires aws-xray-sdk for X-Ray integration
+- The sdk is NOT included in the Lambda Python runtime by default
+- Bundling with the function ensures version control and works with CDK bundling
+- Lambda Layer alternative adds complexity and layer version management
+
+### Consequences
+- Slightly larger Lambda deployment package
+- Must remember to add aws-xray-sdk when using Powertools Tracer
+- Added to CLAUDE.md Known Gotchas for future reference
+
+---
+
 ## Template for New Decisions
 
 ```markdown

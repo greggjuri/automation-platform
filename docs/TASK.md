@@ -11,16 +11,16 @@
 
 ## Backlog (Prioritized)
 
-### Phase 1: Foundation
+### Phase 1: Foundation ✅ COMPLETE
 - [x] Initialize CDK project with Python
 - [x] Create shared_stack.py (IAM roles, SSM paths)
 - [x] Create database_stack.py (DynamoDB tables)
 - [x] Create api_stack.py (API Gateway + Lambda)
 - [x] Implement workflow CRUD in API Lambda
 - [x] Initialize React frontend with Vite + TypeScript
-- [ ] Create workflow list page
-- [ ] Create workflow create/edit form
-- [ ] Deploy and test end-to-end
+- [x] Deploy and test end-to-end
+
+**API Endpoint:** https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com
 
 ### Phase 2: Execution Engine
 - [ ] Create SQS queue and DLQ
@@ -57,6 +57,7 @@
 | Context engineering setup | 2025-12-12 | Slash commands, PRP template, examples folder |
 | PRP-001: Project Foundation | 2025-12-12 | CDK stacks, DynamoDB tables, Lambda dirs, Frontend init |
 | PRP-002: API Gateway + Workflow CRUD | 2025-12-12 | HTTP API, Lambda handler with Powertools, full CRUD ops, 19 unit tests |
+| **Phase 1: Foundation** | 2025-12-12 | All infrastructure deployed. API: https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com |
 
 ## Blockers
 

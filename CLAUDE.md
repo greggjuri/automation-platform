@@ -282,6 +282,7 @@ cd cdk && cdk synth
 3. **Step Functions limits:** Express workflows max 5 min, Standard max 1 year
 4. **API Gateway timeout:** 29 seconds max - design for async if longer operations needed
 5. **CloudFront cache:** Invalidate after frontend deploys
+6. **aws-xray-sdk required for Powertools Tracer:** Must add `aws-xray-sdk>=2.0.0` to Lambda requirements.txt - not included in Lambda runtime by default (see ADR-008)
 
 ## Asking Questions
 
