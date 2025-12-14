@@ -155,6 +155,127 @@ def update_execution_status(
     )
 
 
+@tracer.capture_method
+def update_execution_with_results(
+    workflow_id: str,
+    execution_id: str,
+    status: str,
+    steps: list[dict],
+    error: str | None = None,
+) -> None:
+    """Update execution with step results in DynamoDB.
+
+    Args:
+        workflow_id: Workflow ID
+        execution_id: Execution ID
+        status: Final status (success, failed)
+        steps: Array of step results
+        error: Error message if failed
+    """
+    timestamp = get_current_timestamp()
+
+    update_expr = "SET #status = :status, steps = :steps, finished_at = :finished_at, updated_at = :updated_at"
+    expr_values: dict[str, Any] = {
+        ":status": status,
+        ":steps": steps,
+        ":finished_at": timestamp,
+        ":updated_at": timestamp,
+    }
+    expr_names = {"#status": "status"}
+
+    if error:
+        update_expr += ", #error = :error"
+        expr_values[":error"] = error
+        expr_names["#error"] = "error"
+
+    executions_table.update_item(
+        Key={"workflow_id": workflow_id, "execution_id": execution_id},
+        UpdateExpression=update_expr,
+        ExpressionAttributeValues=expr_values,
+        ExpressionAttributeNames=expr_names,
+    )
+
+    logger.info(
+        "Updated execution with results",
+        execution_id=execution_id,
+        status=status,
+        step_count=len(steps),
+    )
+
+
+# -----------------------------------------------------------------------------
+# Step Functions Response Parsing
+# -----------------------------------------------------------------------------
+
+
+@tracer.capture_method
+def parse_step_results(
+    sfn_output: str | None,
+    workflow_steps: list[dict],
+    failed_step_index: int | None = None,
+    error_message: str | None = None,
+) -> list[dict]:
+    """Parse Step Functions output and build steps array.
+
+    The Step Functions output contains context.steps keyed by step_id with output.
+    This function transforms it to an array matching the Execution model.
+
+    Args:
+        sfn_output: JSON string from Step Functions response output
+        workflow_steps: List of step definitions from the workflow
+        failed_step_index: Index of failed step (if execution failed)
+        error_message: Error message for failed step
+
+    Returns:
+        Array of step results matching Execution.steps model
+    """
+    steps_result: list[dict] = []
+
+    # Parse Step Functions output
+    context_steps: dict = {}
+    if sfn_output:
+        try:
+            output_data = json.loads(sfn_output)
+            context_steps = output_data.get("context", {}).get("steps", {})
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning("Failed to parse Step Functions output", error=str(e))
+
+    # Build steps array in workflow order
+    for idx, step_def in enumerate(workflow_steps):
+        step_id = step_def.get("step_id", f"step_{idx}")
+        step_data = context_steps.get(step_id, {})
+
+        # Determine step status
+        if failed_step_index is not None:
+            if idx < failed_step_index:
+                step_status = "success"
+            elif idx == failed_step_index:
+                step_status = "failed"
+            else:
+                step_status = "skipped"
+        elif step_id in context_steps:
+            step_status = "success"
+        else:
+            step_status = "skipped"
+
+        step_result = {
+            "step_id": step_id,
+            "name": step_def.get("name", step_id),
+            "type": step_def.get("type", "unknown"),
+            "status": step_status,
+            "started_at": None,  # Not available from current SFN output
+            "completed_at": None,  # Not available from current SFN output
+            "duration_ms": step_data.get("duration_ms"),
+            "input": step_data.get("input"),
+            "output": step_data.get("output"),
+            "error": error_message if idx == failed_step_index else step_data.get("error"),
+        }
+
+        steps_result.append(step_result)
+
+    return steps_result
+
+
 # -----------------------------------------------------------------------------
 # Secrets Resolution
 # -----------------------------------------------------------------------------
@@ -284,27 +405,68 @@ def process_record(record: SQSRecord) -> None:
             input=json.dumps(sfn_input),
         )
 
-        # Check execution status
+        # Check execution status and parse results
         sfn_status = sfn_response.get("status")
+        sfn_output = sfn_response.get("output")
+        workflow_steps = workflow.get("steps", [])
+
         if sfn_status == "SUCCEEDED":
-            update_execution_status(workflow_id, execution_id, "success")
-            logger.info("Execution succeeded", execution_id=execution_id)
+            # Parse step results from output
+            steps = parse_step_results(sfn_output, workflow_steps)
+
+            update_execution_with_results(
+                workflow_id=workflow_id,
+                execution_id=execution_id,
+                status="success",
+                steps=steps,
+            )
+            logger.info(
+                "Execution succeeded",
+                execution_id=execution_id,
+                step_count=len(steps),
+            )
         else:
+            # Extract error info
             error_msg = sfn_response.get("error", "Unknown error")
             cause = sfn_response.get("cause", "")
-            update_execution_status(
-                workflow_id, execution_id, "failed",
-                error=f"{error_msg}: {cause}"
+            full_error = f"{error_msg}: {cause}" if cause else error_msg
+
+            # Try to determine which step failed from the output
+            failed_step_index = None
+            if sfn_output:
+                try:
+                    output_data = json.loads(sfn_output)
+                    # step_index indicates which step was being processed
+                    failed_step_index = output_data.get("step_index")
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            # Parse step results with failure info
+            steps = parse_step_results(
+                sfn_output,
+                workflow_steps,
+                failed_step_index=failed_step_index,
+                error_message=full_error,
+            )
+
+            update_execution_with_results(
+                workflow_id=workflow_id,
+                execution_id=execution_id,
+                status="failed",
+                steps=steps,
+                error=full_error,
             )
             logger.error(
                 "Execution failed",
                 execution_id=execution_id,
                 error=error_msg,
                 cause=cause,
+                failed_step_index=failed_step_index,
             )
 
     except Exception as e:
         logger.exception("Failed to start Step Functions execution", error=str(e))
+        # On exception, we don't have step results, just update status
         update_execution_status(workflow_id, execution_id, "failed", error=str(e))
         raise
 

@@ -31,7 +31,7 @@
 - [x] Implement Log action Lambda
 - [x] Add API endpoints for executions
 - [x] Shared interpolation utility with filters
-- [ ] **Save step results to execution record** (steps: [] is empty — step details not persisted to DynamoDB)
+- [x] **Save step results to execution record** (parse SFN output, persist steps array to DynamoDB)
 - [x] Add execution history to frontend
 - [x] Add execution detail view
 
@@ -65,6 +65,7 @@
 | PRP-003 Runtime Fixes | 2025-12-14 | Fixed: API routes, shared module bundling, IAM StartSyncExecution, step type path, sequential loop for context accumulation, step failure propagation |
 | **Phase 2: Execution Engine Backend** | 2025-12-14 | All backend components complete. Frontend execution views remain. |
 | PRP-004: Execution History Frontend | 2025-12-14 | React Query hooks, Workflow list/detail pages, Execution list/detail pages, Run Now button, Status badges |
+| Step Results Persistence | 2025-12-14 | Parse SFN output, extract step results with name/type/status/output/error, persist to DynamoDB |
 
 ## Blockers
 
