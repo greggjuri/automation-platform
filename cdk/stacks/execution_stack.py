@@ -236,7 +236,7 @@ class ExecutionStack(Stack):
         Uses a sequential loop pattern to process steps one at a time,
         accumulating context so each step can reference previous outputs.
         """
-        # Initialize execution state with step index
+        # Initialize execution state with step index and total steps count
         initialize = sfn.Pass(
             self,
             "InitializeExecution",
@@ -247,7 +247,8 @@ class ExecutionStack(Stack):
                 "trigger_data.$": "$.trigger_data",
                 "context.$": "$.context",
                 "step_index": 0,
-                "step_results": [],
+                # Pre-compute total steps since Choice can't use intrinsic functions
+                "total_steps.$": "States.ArrayLength($.workflow.steps)",
             },
         )
 
@@ -262,7 +263,7 @@ class ExecutionStack(Stack):
                 "trigger_data.$": "$.trigger_data",
                 "context.$": "$.context",
                 "step_index.$": "$.step_index",
-                "step_results.$": "$.step_results",
+                "total_steps.$": "$.total_steps",
                 "step.$": "States.ArrayGetItem($.workflow.steps, $.step_index)",
             },
         )
@@ -300,7 +301,7 @@ class ExecutionStack(Stack):
             "SkipUnknownType",
             parameters={
                 "status": "skipped",
-                "output": None,
+                "output": {},
                 "error": "Unknown step type",
                 "duration_ms": 0,
             },
@@ -339,7 +340,7 @@ class ExecutionStack(Stack):
                     "steps.$": "States.JsonMerge($.context.steps, States.StringToJson(States.Format('\\{\"{}\":\\{\"output\":{}\\}\\}', $.step.step_id, States.JsonToString($.step_result.output))), false)",
                 },
                 "step_index.$": "States.MathAdd($.step_index, 1)",
-                "step_results.$": "States.ArrayConcat($.step_results, States.Array($.step_result))",
+                "total_steps.$": "$.total_steps",
             },
         )
 
@@ -362,7 +363,7 @@ class ExecutionStack(Stack):
         has_more_steps.when(
             sfn.Condition.number_less_than_json_path(
                 "$.step_index",
-                "States.ArrayLength($.workflow.steps)",
+                "$.total_steps",
             ),
             get_current_step,
         )
