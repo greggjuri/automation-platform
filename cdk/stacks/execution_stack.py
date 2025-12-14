@@ -9,7 +9,7 @@ Creates:
 
 import os
 
-from aws_cdk import CfnOutput, Duration, RemovalPolicy, Stack
+from aws_cdk import BundlingOptions, CfnOutput, DockerVolume, Duration, RemovalPolicy, Stack
 from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as lambda_
@@ -19,6 +19,9 @@ from aws_cdk import aws_sqs as sqs
 from aws_cdk import aws_stepfunctions as sfn
 from aws_cdk import aws_stepfunctions_tasks as tasks
 from constructs import Construct
+
+# Path to lambdas directory (used for shared module)
+LAMBDAS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "lambdas")
 
 
 class ExecutionStack(Stack):
@@ -153,6 +156,9 @@ class ExecutionStack(Stack):
         if environment:
             env_vars.update(environment)
 
+        # Resolve absolute path to shared module for Docker volume mount
+        shared_path = os.path.abspath(os.path.join(LAMBDAS_DIR, "shared"))
+
         # Create Lambda function
         return lambda_.Function(
             self,
@@ -162,20 +168,24 @@ class ExecutionStack(Stack):
             runtime=lambda_.Runtime.PYTHON_3_11,
             handler=handler,
             code=lambda_.Code.from_asset(
-                path=os.path.join(
-                    os.path.dirname(__file__), "..", "..", "lambdas", code_path
-                ),
-                bundling={
-                    "image": lambda_.Runtime.PYTHON_3_11.bundling_image,
-                    "command": [
+                path=os.path.join(LAMBDAS_DIR, code_path),
+                bundling=BundlingOptions(
+                    image=lambda_.Runtime.PYTHON_3_11.bundling_image,
+                    volumes=[
+                        DockerVolume(
+                            host_path=shared_path,
+                            container_path="/shared",
+                        )
+                    ],
+                    command=[
                         "bash",
                         "-c",
-                        # Copy shared module and install requirements
-                        "cp -r /asset-input/../shared /asset-output/shared 2>/dev/null || true && "
+                        # Copy shared module from mounted volume, install requirements, copy Lambda code
+                        "cp -r /shared /asset-output/shared && "
                         "pip install -r requirements.txt -t /asset-output && "
                         "cp -r . /asset-output",
                     ],
-                },
+                ),
             ),
             memory_size=memory_size,
             timeout=Duration.seconds(timeout_seconds),

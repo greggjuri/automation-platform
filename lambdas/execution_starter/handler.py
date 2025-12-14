@@ -15,11 +15,6 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.batch import BatchProcessor, EventType, process_partial_response
 from aws_lambda_powertools.utilities.batch.types import PartialItemFailureResponse
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
-
-# Import shared module (bundled during CDK deployment)
-import sys
-sys.path.insert(0, os.path.dirname(__file__))
-
 from shared.ids import calculate_ttl_timestamp, generate_execution_id, get_current_timestamp
 
 if TYPE_CHECKING:

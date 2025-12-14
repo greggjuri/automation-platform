@@ -9,12 +9,6 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from aws_lambda_powertools import Logger, Tracer
-
-# Import shared module (bundled during CDK deployment)
-import sys
-import os
-sys.path.insert(0, os.path.dirname(__file__))
-
 from shared.interpolation import InterpolationError, interpolate
 
 if TYPE_CHECKING:
