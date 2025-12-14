@@ -237,8 +237,22 @@ def parse_step_results(
         try:
             output_data = json.loads(sfn_output)
             context_steps = output_data.get("context", {}).get("steps", {})
+            logger.info(
+                "Parsed SFN output",
+                has_context=output_data.get("context") is not None,
+                context_keys=list(output_data.get("context", {}).keys()) if output_data.get("context") else [],
+                step_ids_in_context=list(context_steps.keys()),
+            )
         except (json.JSONDecodeError, TypeError) as e:
             logger.warning("Failed to parse Step Functions output", error=str(e))
+    else:
+        logger.warning("No SFN output to parse")
+
+    logger.info(
+        "Building steps array",
+        workflow_steps_count=len(workflow_steps),
+        workflow_step_ids=[s.get("step_id") for s in workflow_steps],
+    )
 
     # Build steps array in workflow order
     for idx, step_def in enumerate(workflow_steps):
@@ -410,9 +424,26 @@ def process_record(record: SQSRecord) -> None:
         sfn_output = sfn_response.get("output")
         workflow_steps = workflow.get("steps", [])
 
+        # Debug logging
+        logger.info(
+            "SFN response received",
+            sfn_status=sfn_status,
+            has_output=sfn_output is not None,
+            output_length=len(sfn_output) if sfn_output else 0,
+            workflow_step_count=len(workflow_steps),
+        )
+        if sfn_output:
+            logger.debug("SFN raw output", output=sfn_output[:2000] if len(sfn_output) > 2000 else sfn_output)
+
         if sfn_status == "SUCCEEDED":
             # Parse step results from output
             steps = parse_step_results(sfn_output, workflow_steps)
+
+            logger.info(
+                "Parsed step results",
+                step_count=len(steps),
+                steps_preview=[{"step_id": s.get("step_id"), "status": s.get("status")} for s in steps],
+            )
 
             update_execution_with_results(
                 workflow_id=workflow_id,
