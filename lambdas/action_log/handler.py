@@ -51,11 +51,12 @@ def execute_log(config: dict, context: dict, execution_id: str, workflow_id: str
     interpolated_message = interpolate(message, context)
 
     # Log with appropriate level
+    # Note: 'message' is a reserved LogRecord field, use 'log_message' instead
     log_data = {
         "workflow_log": True,
         "execution_id": execution_id,
         "workflow_id": workflow_id,
-        "message": interpolated_message,
+        "log_message": interpolated_message,
     }
 
     if level == "debug":

@@ -324,6 +324,14 @@ class ExecutionStack(Stack):
         )
         route_by_type.otherwise(skip_unknown)
 
+        # Check if step failed (fail-fast behavior)
+        step_failed = sfn.Fail(
+            self,
+            "StepFailed",
+            error="StepExecutionFailed",
+            cause_path="$.step_result.error",
+        )
+
         # Update context with step output and increment index
         update_context = sfn.Pass(
             self,
@@ -344,11 +352,19 @@ class ExecutionStack(Stack):
             },
         )
 
-        # Chain step execution to context update
-        http_request_task.next(update_context)
-        transform_task.next(update_context)
-        log_task.next(update_context)
-        skip_unknown.next(update_context)
+        # Check step result routes to update_context on success, step_failed on failure
+        check_step_result = sfn.Choice(self, "CheckStepResult")
+        check_step_result.when(
+            sfn.Condition.string_equals("$.step_result.status", "failed"),
+            step_failed,
+        )
+        check_step_result.otherwise(update_context)
+
+        # Chain step execution to result check (fail-fast behavior)
+        http_request_task.next(check_step_result)
+        transform_task.next(check_step_result)
+        log_task.next(check_step_result)
+        skip_unknown.next(check_step_result)
 
         # Check if more steps to process
         has_more_steps = sfn.Choice(self, "HasMoreSteps")
