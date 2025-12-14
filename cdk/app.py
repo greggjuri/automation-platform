@@ -11,6 +11,7 @@ import aws_cdk as cdk
 
 from stacks.api_stack import ApiStack
 from stacks.database_stack import DatabaseStack
+from stacks.execution_stack import ExecutionStack
 from stacks.shared_stack import SharedStack
 
 # Get environment from context or default
@@ -47,6 +48,16 @@ api_stack = ApiStack(
     app,
     f"{stack_prefix}-api",
     workflows_table=database_stack.workflows_table,
+    environment=environment,
+    env=env,
+)
+
+# Execution engine (SQS, Step Functions, Action Lambdas)
+execution_stack = ExecutionStack(
+    app,
+    f"{stack_prefix}-execution",
+    workflows_table=database_stack.workflows_table,
+    executions_table=database_stack.executions_table,
     environment=environment,
     env=env,
 )

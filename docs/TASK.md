@@ -7,7 +7,7 @@
 
 | Task | Status | Assignee | Started | Notes |
 |------|--------|----------|---------|-------|
-| _None currently_ | | | | |
+| _No active tasks_ | | | | |
 
 ## Backlog (Prioritized)
 
@@ -22,13 +22,15 @@
 
 **API Endpoint:** https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com
 
-### Phase 2: Execution Engine
-- [ ] Create SQS queue and DLQ
-- [ ] Create execution_stack.py (Step Functions)
-- [ ] Implement execution starter Lambda
-- [ ] Implement HTTP Request action Lambda
-- [ ] Implement Transform action Lambda
-- [ ] Implement Log action Lambda
+### Phase 2: Execution Engine ✅ BACKEND COMPLETE
+- [x] Create SQS queue and DLQ
+- [x] Create execution_stack.py (Step Functions Express)
+- [x] Implement execution starter Lambda
+- [x] Implement HTTP Request action Lambda
+- [x] Implement Transform action Lambda
+- [x] Implement Log action Lambda
+- [x] Add API endpoints for executions
+- [x] Shared interpolation utility with filters
 - [ ] Add execution history to frontend
 - [ ] Add execution detail view
 
@@ -58,6 +60,7 @@
 | PRP-001: Project Foundation | 2025-12-12 | CDK stacks, DynamoDB tables, Lambda dirs, Frontend init |
 | PRP-002: API Gateway + Workflow CRUD | 2025-12-12 | HTTP API, Lambda handler with Powertools, full CRUD ops, 19 unit tests |
 | **Phase 1: Foundation** | 2025-12-12 | All infrastructure deployed. API: https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com |
+| PRP-003: Execution Engine Backend | 2025-12-14 | SQS queues, Step Functions Express, Action Lambdas (HTTP, Transform, Log), Execution Starter, API endpoints, 58 tests |
 
 ## Blockers
 

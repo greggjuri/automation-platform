@@ -1,6 +1,6 @@
-"""DynamoDB repository for Workflow operations.
+"""DynamoDB repository for Workflow and Execution operations.
 
-This module provides a data access layer for the Workflows table,
+This module provides a data access layer for the Workflows and Executions tables,
 encapsulating all DynamoDB operations.
 """
 
@@ -22,14 +22,16 @@ logger = Logger(child=True)
 # -----------------------------------------------------------------------------
 
 TABLE_NAME = os.environ.get("TABLE_NAME", "dev-Workflows")
+EXECUTIONS_TABLE_NAME = os.environ.get("EXECUTIONS_TABLE_NAME", "dev-Executions")
 
 # Initialize DynamoDB resource
 _dynamodb = boto3.resource("dynamodb")
 _table: Table | None = None
+_executions_table: Table | None = None
 
 
 def get_table() -> Table:
-    """Get the DynamoDB table resource (lazy initialization).
+    """Get the Workflows DynamoDB table resource (lazy initialization).
 
     Returns:
         DynamoDB Table resource
@@ -38,6 +40,18 @@ def get_table() -> Table:
     if _table is None:
         _table = _dynamodb.Table(TABLE_NAME)
     return _table
+
+
+def get_executions_table() -> Table:
+    """Get the Executions DynamoDB table resource (lazy initialization).
+
+    Returns:
+        DynamoDB Table resource
+    """
+    global _executions_table
+    if _executions_table is None:
+        _executions_table = _dynamodb.Table(EXECUTIONS_TABLE_NAME)
+    return _executions_table
 
 
 # -----------------------------------------------------------------------------
@@ -195,3 +209,95 @@ def delete_workflow(workflow_id: str) -> bool:
     except table.meta.client.exceptions.ConditionalCheckFailedException:
         logger.warning("Workflow not found for delete", workflow_id=workflow_id)
         return False
+
+
+# -----------------------------------------------------------------------------
+# Execution Repository Functions
+# -----------------------------------------------------------------------------
+
+
+def list_executions(
+    workflow_id: str,
+    limit: int = 20,
+    last_key: str | None = None,
+) -> dict[str, Any]:
+    """List executions for a workflow with pagination.
+
+    Args:
+        workflow_id: The workflow identifier
+        limit: Maximum number of items to return (default 20)
+        last_key: Last execution_id for pagination
+
+    Returns:
+        Dict with 'items' list and optional 'last_key' for pagination
+    """
+    table = get_executions_table()
+
+    logger.info(
+        "Querying executions",
+        workflow_id=workflow_id,
+        limit=limit,
+        last_key=last_key,
+    )
+
+    # Build query parameters
+    query_params: dict[str, Any] = {
+        "KeyConditionExpression": "workflow_id = :wid",
+        "ExpressionAttributeValues": {":wid": workflow_id},
+        "Limit": limit,
+        "ScanIndexForward": False,  # Most recent first
+    }
+
+    # Add pagination key if provided
+    if last_key:
+        query_params["ExclusiveStartKey"] = {
+            "workflow_id": workflow_id,
+            "execution_id": last_key,
+        }
+
+    response = table.query(**query_params)
+
+    items = response.get("Items", [])
+    logger.info("Found executions", count=len(items))
+
+    result: dict[str, Any] = {"items": items}
+
+    # Include pagination key if more results available
+    if "LastEvaluatedKey" in response:
+        result["last_key"] = response["LastEvaluatedKey"]["execution_id"]
+
+    return result
+
+
+def get_execution(workflow_id: str, execution_id: str) -> dict[str, Any] | None:
+    """Get a single execution by ID.
+
+    Args:
+        workflow_id: The workflow identifier
+        execution_id: The execution identifier
+
+    Returns:
+        Execution item if found, None otherwise
+    """
+    table = get_executions_table()
+
+    logger.info(
+        "Getting execution",
+        workflow_id=workflow_id,
+        execution_id=execution_id,
+    )
+
+    response = table.get_item(
+        Key={
+            "workflow_id": workflow_id,
+            "execution_id": execution_id,
+        }
+    )
+    item = response.get("Item")
+
+    if item:
+        logger.info("Execution found", execution_id=execution_id)
+    else:
+        logger.warning("Execution not found", execution_id=execution_id)
+
+    return item

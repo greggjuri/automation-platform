@@ -1,14 +1,17 @@
-"""Lambda handler for Workflow CRUD API.
+"""Lambda handler for Workflow CRUD API and Execution endpoints.
 
 This module provides the main Lambda handler for API Gateway HTTP API,
-implementing workflow CRUD operations using AWS Powertools for routing,
-logging, and tracing.
+implementing workflow CRUD operations and execution management using
+AWS Powertools for routing, logging, and tracing.
 """
 
 from __future__ import annotations
 
+import json
+import os
 from typing import TYPE_CHECKING
 
+import boto3
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import APIGatewayHttpResolver
 from aws_lambda_powertools.event_handler.exceptions import BadRequestError, NotFoundError
@@ -23,7 +26,9 @@ from models import (
 from repository import (
     create_workflow,
     delete_workflow,
+    get_execution,
     get_workflow,
+    list_executions,
     list_workflows,
     update_workflow,
 )
@@ -38,6 +43,10 @@ if TYPE_CHECKING:
 logger = Logger(service="automation-api")
 tracer = Tracer(service="automation-api")
 app = APIGatewayHttpResolver()
+
+# SQS client for execution queue
+sqs_client = boto3.client("sqs")
+EXECUTION_QUEUE_URL = os.environ.get("EXECUTION_QUEUE_URL", "")
 
 
 # -----------------------------------------------------------------------------
@@ -217,6 +226,140 @@ def delete_workflow_handler(workflow_id: str) -> dict:
     logger.info("Workflow deleted", workflow_id=workflow_id)
 
     return {"message": f"Workflow {workflow_id} deleted", "workflow_id": workflow_id}
+
+
+# -----------------------------------------------------------------------------
+# Execution Routes
+# -----------------------------------------------------------------------------
+
+
+@app.post("/workflows/<workflow_id>/execute")
+@tracer.capture_method
+def execute_workflow_handler(workflow_id: str) -> dict:
+    """Queue a manual workflow execution.
+
+    Args:
+        workflow_id: The workflow identifier
+
+    Returns:
+        Execution queued confirmation with status
+
+    Raises:
+        NotFoundError: If workflow doesn't exist
+        BadRequestError: If workflow is disabled or queue unavailable
+    """
+    logger.info("Queueing workflow execution", workflow_id=workflow_id)
+
+    # Verify workflow exists
+    workflow = get_workflow(workflow_id)
+    if not workflow:
+        raise NotFoundError(f"Workflow {workflow_id} not found")
+
+    # Check if workflow is enabled
+    if not workflow.get("enabled", True):
+        raise BadRequestError(f"Workflow {workflow_id} is disabled")
+
+    # Check queue URL is configured
+    if not EXECUTION_QUEUE_URL:
+        logger.error("EXECUTION_QUEUE_URL not configured")
+        raise BadRequestError("Execution queue not configured")
+
+    # Get optional trigger data from request body
+    body = app.current_event.json_body or {}
+    trigger_data = body.get("trigger_data", {})
+
+    # Send message to SQS queue
+    message = {
+        "workflow_id": workflow_id,
+        "trigger_type": "manual",
+        "trigger_data": trigger_data,
+    }
+
+    try:
+        sqs_client.send_message(
+            QueueUrl=EXECUTION_QUEUE_URL,
+            MessageBody=json.dumps(message),
+        )
+    except Exception as e:
+        logger.exception("Failed to queue execution", error=str(e))
+        raise BadRequestError(f"Failed to queue execution: {str(e)}")
+
+    logger.info("Execution queued", workflow_id=workflow_id)
+
+    return {
+        "status": "queued",
+        "workflow_id": workflow_id,
+        "message": "Execution queued successfully",
+    }
+
+
+@app.get("/workflows/<workflow_id>/executions")
+@tracer.capture_method
+def list_executions_handler(workflow_id: str) -> dict:
+    """List executions for a workflow.
+
+    Supports pagination via query parameters:
+    - limit: Number of results (default 20, max 100)
+    - last_key: Last execution_id for pagination
+
+    Args:
+        workflow_id: The workflow identifier
+
+    Returns:
+        Object with executions array, count, and pagination info
+
+    Raises:
+        NotFoundError: If workflow doesn't exist
+    """
+    logger.info("Listing executions", workflow_id=workflow_id)
+
+    # Verify workflow exists
+    workflow = get_workflow(workflow_id)
+    if not workflow:
+        raise NotFoundError(f"Workflow {workflow_id} not found")
+
+    # Get pagination params
+    params = app.current_event.query_string_parameters or {}
+    limit = min(int(params.get("limit", "20")), 100)
+    last_key = params.get("last_key")
+
+    # Query executions
+    result = list_executions(workflow_id, limit=limit, last_key=last_key)
+
+    return {
+        "executions": result["items"],
+        "count": len(result["items"]),
+        "last_key": result.get("last_key"),
+    }
+
+
+@app.get("/workflows/<workflow_id>/executions/<execution_id>")
+@tracer.capture_method
+def get_execution_handler(workflow_id: str, execution_id: str) -> dict:
+    """Get a single execution by ID.
+
+    Args:
+        workflow_id: The workflow identifier
+        execution_id: The execution identifier
+
+    Returns:
+        Full execution record with step details
+
+    Raises:
+        NotFoundError: If execution doesn't exist
+    """
+    logger.info(
+        "Getting execution",
+        workflow_id=workflow_id,
+        execution_id=execution_id,
+    )
+
+    execution = get_execution(workflow_id, execution_id)
+
+    if not execution:
+        raise NotFoundError(f"Execution {execution_id} not found")
+
+    return execution
 
 
 # -----------------------------------------------------------------------------
