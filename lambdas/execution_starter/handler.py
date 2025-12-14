@@ -188,6 +188,14 @@ def update_execution_with_results(
         expr_values[":error"] = error
         expr_names["#error"] = "error"
 
+    logger.info(
+        "Updating DynamoDB with steps",
+        execution_id=execution_id,
+        status=status,
+        step_count=len(steps),
+        steps_data=steps,  # Log full steps data for debugging
+    )
+
     executions_table.update_item(
         Key={"workflow_id": workflow_id, "execution_id": execution_id},
         UpdateExpression=update_expr,
@@ -374,6 +382,14 @@ def process_record(record: SQSRecord) -> None:
     if not workflow:
         logger.error("Workflow not found", workflow_id=workflow_id)
         raise ValueError(f"Workflow {workflow_id} not found")
+
+    logger.info(
+        "Fetched workflow",
+        workflow_id=workflow_id,
+        workflow_name=workflow.get("name"),
+        step_count=len(workflow.get("steps", [])),
+        step_ids=[s.get("step_id") for s in workflow.get("steps", [])],
+    )
 
     # Check if workflow is enabled
     if not workflow.get("enabled", True):
