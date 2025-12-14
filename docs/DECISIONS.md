@@ -247,6 +247,61 @@ Add `aws-xray-sdk>=2.0.0` explicitly to each Lambda's `requirements.txt`.
 
 ---
 
+## ADR-009: Sequential Step Functions Loop Pattern
+
+**Date:** 2025-12-14
+**Status:** Accepted
+
+### Context
+Workflow steps need to reference outputs from previous steps using variable interpolation like `{{steps.step_1.output.body}}`. The state machine must accumulate context as it processes each step sequentially.
+
+### Options Considered
+1. **Map state** - Process all steps in parallel/sequence, but each iteration is independent
+2. **Sequential loop with Pass states** - Use step_index counter, loop back after each step
+3. **Chained Lambda calls** - Each Lambda calls the next, passing context
+
+### Decision
+Use a sequential loop pattern with Pass states and intrinsic functions.
+
+### Implementation
+```
+InitializeExecution (set step_index=0, total_steps)
+    ↓
+HasMoreSteps (Choice: step_index < total_steps?)
+    ↓ yes
+GetCurrentStep (ArrayGetItem to get current step)
+    ↓
+RouteByStepType (Choice: http_request/transform/log)
+    ↓
+ExecuteAction (Lambda task)
+    ↓
+CheckStepResult (Choice: failed? → StepFailed)
+    ↓ success
+UpdateContext (JsonMerge step output, MathAdd index)
+    ↓
+→ back to HasMoreSteps
+```
+
+Key intrinsic functions used:
+- `States.ArrayLength` - Get total steps count
+- `States.ArrayGetItem` - Get step at current index
+- `States.JsonMerge` - Accumulate step outputs into context
+- `States.MathAdd` - Increment step index
+
+### Rationale
+- Map state processes items independently, cannot accumulate context between iterations
+- Sequential loop allows each step to access all previous step outputs
+- Intrinsic functions avoid extra Lambda invocations for simple operations
+- Choice-based fail-fast ensures step failures propagate to execution status
+
+### Consequences
+- More complex state machine definition than Map state
+- Limited to intrinsic function capabilities for data manipulation
+- Must pre-compute array length (Choice can't use intrinsic functions directly)
+- Clear execution flow visible in Step Functions console
+
+---
+
 ## Template for New Decisions
 
 ```markdown
