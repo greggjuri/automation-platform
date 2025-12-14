@@ -61,6 +61,7 @@
 | PRP-002: API Gateway + Workflow CRUD | 2025-12-12 | HTTP API, Lambda handler with Powertools, full CRUD ops, 19 unit tests |
 | **Phase 1: Foundation** | 2025-12-12 | All infrastructure deployed. API: https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com |
 | PRP-003: Execution Engine Backend | 2025-12-14 | SQS queues, Step Functions Express, Action Lambdas (HTTP, Transform, Log), Execution Starter, API endpoints, 58 tests |
+| PRP-003 Runtime Fixes | 2025-12-14 | Fixed: API routes, shared module bundling, IAM StartSyncExecution, step type path, replaced Map state with sequential loop for context accumulation |
 
 ## Blockers
 
