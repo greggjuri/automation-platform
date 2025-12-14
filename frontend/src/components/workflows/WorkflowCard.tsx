@@ -25,8 +25,8 @@ interface WorkflowCardProps {
  * ```
  */
 export function WorkflowCard({ workflow }: WorkflowCardProps) {
-  const triggerLabel = getTriggerLabel(workflow.trigger.type);
-  const stepCount = workflow.steps.length;
+  const triggerLabel = getTriggerLabel(workflow.trigger?.type);
+  const stepCount = workflow.steps?.length ?? 0;
 
   return (
     <Link
@@ -66,7 +66,8 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
 }
 
 /** Get human-readable trigger type label */
-function getTriggerLabel(type: string): string {
+function getTriggerLabel(type?: string): string {
+  if (!type) return 'Unknown';
   const labels: Record<string, string> = {
     webhook: 'Webhook',
     cron: 'Schedule',
