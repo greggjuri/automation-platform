@@ -22,7 +22,7 @@
 
 **API Endpoint:** https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com
 
-### Phase 2: Execution Engine ✅ BACKEND COMPLETE
+### Phase 2: Execution Engine
 - [x] Create SQS queue and DLQ
 - [x] Create execution_stack.py (Step Functions Express)
 - [x] Implement execution starter Lambda
@@ -31,6 +31,7 @@
 - [x] Implement Log action Lambda
 - [x] Add API endpoints for executions
 - [x] Shared interpolation utility with filters
+- [ ] **Save step results to execution record** (steps: [] is empty — step details not persisted to DynamoDB)
 - [ ] Add execution history to frontend
 - [ ] Add execution detail view
 
