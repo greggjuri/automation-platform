@@ -290,15 +290,15 @@ class ExecutionStack(Stack):
         # Route by step type
         route_by_type = sfn.Choice(self, "RouteByStepType")
         route_by_type.when(
-            sfn.Condition.string_equals("$.step.action", "http_request"),
+            sfn.Condition.string_equals("$.step.type", "http_request"),
             http_request_task,
         )
         route_by_type.when(
-            sfn.Condition.string_equals("$.step.action", "transform"),
+            sfn.Condition.string_equals("$.step.type", "transform"),
             transform_task,
         )
         route_by_type.when(
-            sfn.Condition.string_equals("$.step.action", "log"),
+            sfn.Condition.string_equals("$.step.type", "log"),
             log_task,
         )
         route_by_type.otherwise(skip_unknown)
