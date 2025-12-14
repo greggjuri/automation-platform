@@ -3,7 +3,7 @@
 Creates:
 - Lambda function for API handling
 - HTTP API Gateway with CORS
-- Routes for workflow CRUD operations
+- Routes for workflow CRUD and execution operations
 - CloudWatch log group
 """
 
@@ -15,6 +15,7 @@ from aws_cdk import aws_apigatewayv2_integrations as integrations
 from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_logs as logs
+from aws_cdk import aws_sqs as sqs
 from constructs import Construct
 
 
@@ -33,6 +34,8 @@ class ApiStack(Stack):
         construct_id: str,
         *,
         workflows_table: dynamodb.ITable,
+        executions_table: dynamodb.ITable | None = None,
+        execution_queue: sqs.IQueue | None = None,
         environment: str = "dev",
         **kwargs,
     ) -> None:
@@ -42,12 +45,16 @@ class ApiStack(Stack):
             scope: CDK scope
             construct_id: Stack identifier
             workflows_table: DynamoDB table for workflows
+            executions_table: DynamoDB table for executions (optional)
+            execution_queue: SQS queue for execution requests (optional)
             environment: Deployment environment (dev, staging, prod)
             **kwargs: Additional stack options
         """
         super().__init__(scope, construct_id, **kwargs)
 
         self.env_name = environment
+        self.executions_table = executions_table
+        self.execution_queue = execution_queue
 
         # Create Lambda function
         self._create_lambda(workflows_table)
@@ -79,12 +86,27 @@ class ApiStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
         )
 
+        # Build environment variables
+        env_vars = {
+            "TABLE_NAME": workflows_table.table_name,
+            "ENVIRONMENT": self.env_name,
+            "POWERTOOLS_SERVICE_NAME": "automation-api",
+            "POWERTOOLS_LOG_LEVEL": "INFO" if self.env_name == "prod" else "DEBUG",
+            "POWERTOOLS_METRICS_NAMESPACE": "AutomationPlatform",
+        }
+
+        # Add execution-related env vars if available
+        if self.executions_table:
+            env_vars["EXECUTIONS_TABLE_NAME"] = self.executions_table.table_name
+        if self.execution_queue:
+            env_vars["EXECUTION_QUEUE_URL"] = self.execution_queue.queue_url
+
         # Lambda function for API handling
         self.api_handler = lambda_.Function(
             self,
             "ApiHandler",
             function_name=f"{self.env_name}-automation-api-handler",
-            description="Handles API Gateway requests for workflow operations",
+            description="Handles API Gateway requests for workflow and execution operations",
             # Runtime and code
             runtime=lambda_.Runtime.PYTHON_3_11,
             handler="handler.handler",
@@ -105,13 +127,7 @@ class ApiStack(Stack):
             memory_size=256,
             timeout=Duration.seconds(29),  # API Gateway max is 29s
             # Environment variables
-            environment={
-                "TABLE_NAME": workflows_table.table_name,
-                "ENVIRONMENT": self.env_name,
-                "POWERTOOLS_SERVICE_NAME": "automation-api",
-                "POWERTOOLS_LOG_LEVEL": "INFO" if self.env_name == "prod" else "DEBUG",
-                "POWERTOOLS_METRICS_NAMESPACE": "AutomationPlatform",
-            },
+            environment=env_vars,
             # Logging
             log_group=log_group,
             # Tracing
@@ -120,6 +136,14 @@ class ApiStack(Stack):
 
         # Grant DynamoDB read/write permissions
         workflows_table.grant_read_write_data(self.api_handler)
+
+        # Grant executions table access if available
+        if self.executions_table:
+            self.executions_table.grant_read_data(self.api_handler)
+
+        # Grant SQS send permissions if queue available
+        if self.execution_queue:
+            self.execution_queue.grant_send_messages(self.api_handler)
 
     def _create_api_gateway(self) -> None:
         """Create the HTTP API Gateway with routes."""
@@ -182,5 +206,26 @@ class ApiStack(Stack):
                 apigwv2.HttpMethod.PUT,
                 apigwv2.HttpMethod.DELETE,
             ],
+            integration=api_integration,
+        )
+
+        # Execution routes - trigger execution
+        self.api.add_routes(
+            path="/workflows/{workflow_id}/execute",
+            methods=[apigwv2.HttpMethod.POST],
+            integration=api_integration,
+        )
+
+        # Execution routes - list executions
+        self.api.add_routes(
+            path="/workflows/{workflow_id}/executions",
+            methods=[apigwv2.HttpMethod.GET],
+            integration=api_integration,
+        )
+
+        # Execution routes - single execution
+        self.api.add_routes(
+            path="/workflows/{workflow_id}/executions/{execution_id}",
+            methods=[apigwv2.HttpMethod.GET],
             integration=api_integration,
         )

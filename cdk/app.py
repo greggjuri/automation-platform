@@ -43,21 +43,24 @@ database_stack = DatabaseStack(
     env=env,
 )
 
-# API Gateway and Lambda
-api_stack = ApiStack(
-    app,
-    f"{stack_prefix}-api",
-    workflows_table=database_stack.workflows_table,
-    environment=environment,
-    env=env,
-)
-
 # Execution engine (SQS, Step Functions, Action Lambdas)
+# Created before API stack so we can pass execution_queue to API
 execution_stack = ExecutionStack(
     app,
     f"{stack_prefix}-execution",
     workflows_table=database_stack.workflows_table,
     executions_table=database_stack.executions_table,
+    environment=environment,
+    env=env,
+)
+
+# API Gateway and Lambda
+api_stack = ApiStack(
+    app,
+    f"{stack_prefix}-api",
+    workflows_table=database_stack.workflows_table,
+    executions_table=database_stack.executions_table,
+    execution_queue=execution_stack.execution_queue,
     environment=environment,
     env=env,
 )
