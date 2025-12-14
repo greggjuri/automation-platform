@@ -383,7 +383,7 @@ class ExecutionStack(Stack):
         # Grant permissions
         self.workflows_table.grant_read_data(self.execution_starter)
         self.executions_table.grant_read_write_data(self.execution_starter)
-        self.state_machine.grant_start_execution(self.execution_starter)
+        self.state_machine.grant_start_sync_execution(self.execution_starter)
 
         # Grant SSM read permissions for secrets
         self.execution_starter.add_to_role_policy(
