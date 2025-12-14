@@ -32,8 +32,8 @@
 - [x] Add API endpoints for executions
 - [x] Shared interpolation utility with filters
 - [ ] **Save step results to execution record** (steps: [] is empty — step details not persisted to DynamoDB)
-- [ ] Add execution history to frontend
-- [ ] Add execution detail view
+- [x] Add execution history to frontend
+- [x] Add execution detail view
 
 ### Phase 3: Triggers
 - [ ] Create triggers_stack.py
@@ -64,6 +64,7 @@
 | PRP-003: Execution Engine Backend | 2025-12-14 | SQS queues, Step Functions Express, Action Lambdas (HTTP, Transform, Log), Execution Starter, API endpoints, 58 tests |
 | PRP-003 Runtime Fixes | 2025-12-14 | Fixed: API routes, shared module bundling, IAM StartSyncExecution, step type path, sequential loop for context accumulation, step failure propagation |
 | **Phase 2: Execution Engine Backend** | 2025-12-14 | All backend components complete. Frontend execution views remain. |
+| PRP-004: Execution History Frontend | 2025-12-14 | React Query hooks, Workflow list/detail pages, Execution list/detail pages, Run Now button, Status badges |
 
 ## Blockers
 
