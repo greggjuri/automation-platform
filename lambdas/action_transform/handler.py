@@ -103,12 +103,10 @@ def handler(event: dict, context: LambdaContext) -> dict:
 
     Returns:
     {
-        "success": true/false,
+        "status": "success" or "failed",
         "output": {...},  # Transformed data
         "error": null/string,
-        "duration_ms": 123,
-        "step_result": {...},  # For storing in execution record
-        "step_context": {...}  # For updating context.steps
+        "duration_ms": 123
     }
     """
     step = event.get("step", {})
@@ -123,52 +121,38 @@ def handler(event: dict, context: LambdaContext) -> dict:
     )
 
     start_time = time.time()
-    result: dict[str, Any] = {
-        "success": False,
-        "output": None,
-        "error": None,
-        "duration_ms": 0,
-    }
+    output = None
+    error = None
+    status = "failed"
 
     try:
         output = execute_transform(step_config, exec_context)
-        result["success"] = True
-        result["output"] = output
+        status = "success"
 
     except InterpolationError as e:
         logger.exception("Interpolation error", error=str(e))
-        result["error"] = f"Variable interpolation failed: {e.message}"
+        error = f"Variable interpolation failed: {e.message}"
 
     except ValueError as e:
         logger.exception("Invalid config", error=str(e))
-        result["error"] = f"Invalid transform config: {str(e)}"
+        error = f"Invalid transform config: {str(e)}"
 
     except Exception as e:
         logger.exception("Unexpected error", error=str(e))
-        result["error"] = f"Unexpected error: {str(e)}"
+        error = f"Unexpected error: {str(e)}"
 
-    finally:
-        result["duration_ms"] = int((time.time() - start_time) * 1000)
-
-    # Build step result for execution record
-    result["step_result"] = {
-        "step_id": step_id,
-        "status": "success" if result["success"] else "failed",
-        "duration_ms": result["duration_ms"],
-        "output": result["output"],
-        "error": result["error"],
-    }
-
-    # Build context update for next steps
-    result["step_context"] = {
-        step_id: {"output": result["output"]}
-    }
+    duration_ms = int((time.time() - start_time) * 1000)
 
     logger.info(
         "Transform action completed",
         step_id=step_id,
-        success=result["success"],
-        duration_ms=result["duration_ms"],
+        status=status,
+        duration_ms=duration_ms,
     )
 
-    return result
+    return {
+        "status": status,
+        "output": output,
+        "error": error,
+        "duration_ms": duration_ms,
+    }

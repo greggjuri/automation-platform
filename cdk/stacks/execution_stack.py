@@ -233,10 +233,10 @@ class ExecutionStack(Stack):
     def _create_state_machine(self) -> None:
         """Create Step Functions Express state machine.
 
-        Uses Map state to iterate over workflow steps, which is more
-        compatible with CDK and handles dynamic array access properly.
+        Uses a sequential loop pattern to process steps one at a time,
+        accumulating context so each step can reference previous outputs.
         """
-        # Initialize execution state
+        # Initialize execution state with step index
         initialize = sfn.Pass(
             self,
             "InitializeExecution",
@@ -246,6 +246,24 @@ class ExecutionStack(Stack):
                 "workflow.$": "$.workflow",
                 "trigger_data.$": "$.trigger_data",
                 "context.$": "$.context",
+                "step_index": 0,
+                "step_results": [],
+            },
+        )
+
+        # Get current step using States.ArrayGetItem intrinsic function
+        get_current_step = sfn.Pass(
+            self,
+            "GetCurrentStep",
+            parameters={
+                "execution_id.$": "$.execution_id",
+                "workflow_id.$": "$.workflow_id",
+                "workflow.$": "$.workflow",
+                "trigger_data.$": "$.trigger_data",
+                "context.$": "$.context",
+                "step_index.$": "$.step_index",
+                "step_results.$": "$.step_results",
+                "step.$": "States.ArrayGetItem($.workflow.steps, $.step_index)",
             },
         )
 
@@ -276,13 +294,15 @@ class ExecutionStack(Stack):
             payload_response_only=True,
         )
 
-        # Success state for unknown types (skip)
+        # Skip unknown step types
         skip_unknown = sfn.Pass(
             self,
             "SkipUnknownType",
             parameters={
                 "status": "skipped",
+                "output": None,
                 "error": "Unknown step type",
+                "duration_ms": 0,
             },
             result_path="$.step_result",
         )
@@ -303,38 +323,34 @@ class ExecutionStack(Stack):
         )
         route_by_type.otherwise(skip_unknown)
 
-        # Collect result pass state
-        collect_result = sfn.Pass(
+        # Update context with step output and increment index
+        update_context = sfn.Pass(
             self,
-            "CollectStepResult",
+            "UpdateContext",
             parameters={
-                "step_name.$": "$.step.name",
-                "status.$": "$.step_result.status",
-                "output.$": "$.step_result.output",
-            },
-        )
-
-        # Chain step execution
-        http_request_task.next(collect_result)
-        transform_task.next(collect_result)
-        log_task.next(collect_result)
-        skip_unknown.next(collect_result)
-
-        # Map state to iterate over all steps
-        process_steps = sfn.Map(
-            self,
-            "ProcessAllSteps",
-            items_path="$.workflow.steps",
-            parameters={
-                "step.$": "$$.Map.Item.Value",
-                "step_index.$": "$$.Map.Item.Index",
                 "execution_id.$": "$.execution_id",
                 "workflow_id.$": "$.workflow_id",
-                "context.$": "$.context",
+                "workflow.$": "$.workflow",
+                "trigger_data.$": "$.trigger_data",
+                "context": {
+                    "trigger.$": "$.context.trigger",
+                    "secrets.$": "$.context.secrets",
+                    # Merge previous steps with new step output
+                    "steps.$": "States.JsonMerge($.context.steps, States.StringToJson(States.Format('\\{\"{}\":\\{\"output\":{}\\}\\}', $.step.step_id, States.JsonToString($.step_result.output))), false)",
+                },
+                "step_index.$": "States.MathAdd($.step_index, 1)",
+                "step_results.$": "States.ArrayConcat($.step_results, States.Array($.step_result))",
             },
-            result_path="$.step_results",
         )
-        process_steps.item_processor(route_by_type)
+
+        # Chain step execution to context update
+        http_request_task.next(update_context)
+        transform_task.next(update_context)
+        log_task.next(update_context)
+        skip_unknown.next(update_context)
+
+        # Check if more steps to process
+        has_more_steps = sfn.Choice(self, "HasMoreSteps")
 
         # Success state
         execution_success = sfn.Succeed(
@@ -342,8 +358,24 @@ class ExecutionStack(Stack):
             "ExecutionSuccess",
         )
 
-        # Build the definition
-        definition = initialize.next(process_steps).next(execution_success)
+        # Loop back or finish
+        has_more_steps.when(
+            sfn.Condition.number_less_than_json_path(
+                "$.step_index",
+                "States.ArrayLength($.workflow.steps)",
+            ),
+            get_current_step,
+        )
+        has_more_steps.otherwise(execution_success)
+
+        # Connect update_context to the check
+        update_context.next(has_more_steps)
+
+        # Connect get_current_step to routing
+        get_current_step.next(route_by_type)
+
+        # Build the definition: initialize -> check -> get step -> execute -> update -> check...
+        definition = initialize.next(has_more_steps)
 
         # Create the state machine
         self.state_machine = sfn.StateMachine(

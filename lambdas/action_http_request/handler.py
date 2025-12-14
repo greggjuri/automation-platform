@@ -133,12 +133,10 @@ def handler(event: dict, context: LambdaContext) -> dict:
 
     Returns:
     {
-        "success": true/false,
+        "status": "success" or "failed",
         "output": {...},  # Response data
         "error": null/string,
-        "duration_ms": 123,
-        "step_result": {...},  # For storing in execution record
-        "step_context": {...}  # For updating context.steps
+        "duration_ms": 123
     }
     """
     step = event.get("step", {})
@@ -153,61 +151,47 @@ def handler(event: dict, context: LambdaContext) -> dict:
     )
 
     start_time = time.time()
-    result: dict[str, Any] = {
-        "success": False,
-        "output": None,
-        "error": None,
-        "duration_ms": 0,
-    }
+    output = None
+    error = None
+    status = "failed"
 
     try:
         output = execute_http_request(step_config, exec_context)
-        result["success"] = True
-        result["output"] = output
+        status = "success"
 
         # Check for HTTP error status codes
         if output["status_code"] >= 400:
-            result["success"] = False
-            result["error"] = f"HTTP {output['status_code']}"
+            status = "failed"
+            error = f"HTTP {output['status_code']}"
 
     except InterpolationError as e:
         logger.exception("Interpolation error", error=str(e))
-        result["error"] = f"Variable interpolation failed: {e.message}"
+        error = f"Variable interpolation failed: {e.message}"
 
-    except requests.Timeout as e:
-        logger.exception("Request timeout", error=str(e))
-        result["error"] = f"Request timed out after {step_config.get('timeout_seconds', 30)}s"
+    except requests.Timeout:
+        logger.exception("Request timeout")
+        error = f"Request timed out after {step_config.get('timeout_seconds', 30)}s"
 
     except requests.RequestException as e:
         logger.exception("Request failed", error=str(e))
-        result["error"] = f"HTTP request failed: {str(e)}"
+        error = f"HTTP request failed: {str(e)}"
 
     except Exception as e:
         logger.exception("Unexpected error", error=str(e))
-        result["error"] = f"Unexpected error: {str(e)}"
+        error = f"Unexpected error: {str(e)}"
 
-    finally:
-        result["duration_ms"] = int((time.time() - start_time) * 1000)
-
-    # Build step result for execution record
-    result["step_result"] = {
-        "step_id": step_id,
-        "status": "success" if result["success"] else "failed",
-        "duration_ms": result["duration_ms"],
-        "output": result["output"],
-        "error": result["error"],
-    }
-
-    # Build context update for next steps
-    result["step_context"] = {
-        step_id: {"output": result["output"]}
-    }
+    duration_ms = int((time.time() - start_time) * 1000)
 
     logger.info(
         "HTTP request action completed",
         step_id=step_id,
-        success=result["success"],
-        duration_ms=result["duration_ms"],
+        status=status,
+        duration_ms=duration_ms,
     )
 
-    return result
+    return {
+        "status": status,
+        "output": output,
+        "error": error,
+        "duration_ms": duration_ms,
+    }
