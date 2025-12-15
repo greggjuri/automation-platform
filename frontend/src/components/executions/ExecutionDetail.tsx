@@ -24,7 +24,7 @@ interface ExecutionDetailProps {
  * ```
  */
 export function ExecutionDetail({ execution }: ExecutionDetailProps) {
-  const duration = calculateDuration(execution.started_at, execution.completed_at);
+  const duration = calculateDuration(execution.started_at, execution.finished_at);
 
   return (
     <div className="space-y-6">
@@ -51,8 +51,8 @@ export function ExecutionDetail({ execution }: ExecutionDetailProps) {
           <div>
             <dt className="text-sm text-slate-400">Completed</dt>
             <dd className="mt-1 text-sm text-white">
-              {execution.completed_at
-                ? formatDateTime(execution.completed_at)
+              {execution.finished_at
+                ? formatDateTime(execution.finished_at)
                 : 'In progress...'}
             </dd>
           </div>
@@ -88,12 +88,12 @@ export function ExecutionDetail({ execution }: ExecutionDetailProps) {
         )}
       </div>
 
-      {/* Trigger Input */}
-      {execution.trigger_input && (
+      {/* Trigger Data */}
+      {execution.trigger_data && (
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Trigger Input</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Trigger Data</h2>
           <pre className="p-4 bg-slate-900 rounded-lg overflow-x-auto text-sm text-slate-300 font-mono">
-            {JSON.stringify(execution.trigger_input, null, 2)}
+            {JSON.stringify(execution.trigger_data, null, 2)}
           </pre>
         </div>
       )}
@@ -124,9 +124,9 @@ function StepCard({ step, index }: { step: ExecutionStep; index: number }) {
         {step.started_at && (
           <div className="flex gap-4 text-xs text-slate-400">
             <span>Started: {formatDateTime(step.started_at)}</span>
-            {step.completed_at && (
+            {step.finished_at && (
               <span>
-                Duration: {calculateDuration(step.started_at, step.completed_at)}
+                Duration: {calculateDuration(step.started_at, step.finished_at)}
               </span>
             )}
           </div>

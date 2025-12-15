@@ -28,7 +28,7 @@ interface ExecutionRowProps {
  * ```
  */
 export function ExecutionRow({ execution, workflowId }: ExecutionRowProps) {
-  const duration = calculateDuration(execution.started_at, execution.completed_at);
+  const duration = calculateDuration(execution.started_at, execution.finished_at);
 
   return (
     <Link

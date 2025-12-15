@@ -25,7 +25,7 @@ export interface ExecutionStep {
   /** ISO timestamp when step started */
   started_at: string | null;
   /** ISO timestamp when step finished */
-  completed_at: string | null;
+  finished_at: string | null;
   /** Duration in milliseconds */
   duration_ms?: number | null;
   /** Input data passed to the step */
@@ -51,13 +51,13 @@ export interface Execution {
   /** What triggered this execution */
   trigger_type?: string;
   /** Data from the trigger event */
-  trigger_input?: Record<string, unknown>;
+  trigger_data?: Record<string, unknown>;
   /** Results for each step */
   steps: ExecutionStep[];
   /** ISO timestamp when execution started */
   started_at: string;
   /** ISO timestamp when execution finished (null if still running) */
-  completed_at?: string | null;
+  finished_at?: string | null;
   /** Error message if execution failed */
   error?: string | null;
 }
