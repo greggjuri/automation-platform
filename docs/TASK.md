@@ -21,8 +21,9 @@
 - [x] Deploy and test end-to-end
 
 **API Endpoint:** https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com
+**Frontend URL:** https://automations.jurigregg.com
 
-### Phase 2: Execution Engine
+### Phase 2: Execution Engine ✅ COMPLETE
 - [x] Create SQS queue and DLQ
 - [x] Create execution_stack.py (Step Functions Express)
 - [x] Implement execution starter Lambda
@@ -31,9 +32,13 @@
 - [x] Implement Log action Lambda
 - [x] Add API endpoints for executions
 - [x] Shared interpolation utility with filters
-- [x] **Save step results to execution record** (parse SFN output, persist steps array to DynamoDB)
+- [x] Save step results to execution record
 - [x] Add execution history to frontend
 - [x] Add execution detail view
+
+**Known Issues (to address in Phase 4):**
+- SSM permissions for secrets (warning in logs when no secrets configured)
+- Interpolation error handling for missing variables
 
 ### Phase 3: Triggers
 - [ ] Create triggers_stack.py
@@ -66,6 +71,7 @@
 | **Phase 2: Execution Engine Backend** | 2025-12-14 | All backend components complete. Frontend execution views remain. |
 | PRP-004: Execution History Frontend | 2025-12-14 | React Query hooks, Workflow list/detail pages, Execution list/detail pages, Run Now button, Status badges |
 | Step Results Persistence | 2025-12-14 | Parse SFN output, extract step results with name/type/status/output/error, persist to DynamoDB |
+| Frontend Deployment | 2025-12-14 | CDK frontend_stack.py: S3 + CloudFront + Route 53 for automations.jurigregg.com |
 
 ## Blockers
 
