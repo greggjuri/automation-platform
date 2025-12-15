@@ -12,6 +12,7 @@ import aws_cdk as cdk
 from stacks.api_stack import ApiStack
 from stacks.database_stack import DatabaseStack
 from stacks.execution_stack import ExecutionStack
+from stacks.frontend_stack import FrontendStack
 from stacks.shared_stack import SharedStack
 
 # Get environment from context or default
@@ -61,6 +62,18 @@ api_stack = ApiStack(
     workflows_table=database_stack.workflows_table,
     executions_table=database_stack.executions_table,
     execution_queue=execution_stack.execution_queue,
+    environment=environment,
+    env=env,
+)
+
+# Frontend (S3, CloudFront, Route 53)
+frontend_stack = FrontendStack(
+    app,
+    f"{stack_prefix}-frontend",
+    domain_name="automations.jurigregg.com",
+    hosted_zone_id="Z0064626MF3NMWPFKM6S",  # jurigregg.com hosted zone
+    hosted_zone_name="jurigregg.com",
+    certificate_arn="arn:aws:acm:us-east-1:490004610151:certificate/ada55692-5653-49e3-bbcc-ea841060a763",
     environment=environment,
     env=env,
 )
