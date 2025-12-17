@@ -91,11 +91,19 @@ export function WorkflowDetailPage() {
             )}
           </div>
 
-          <button
-            onClick={handleRunNow}
-            disabled={executeWorkflow.isPending}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
+          <div className="flex gap-2">
+            <Link
+              to={`/workflows/${workflowId}/edit`}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-slate-700 text-white hover:bg-slate-600 transition-colors"
+            >
+              <EditIcon />
+              Edit
+            </Link>
+            <button
+              onClick={handleRunNow}
+              disabled={executeWorkflow.isPending}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
             {executeWorkflow.isPending ? (
               <>
                 <svg
@@ -126,7 +134,8 @@ export function WorkflowDetailPage() {
                 Run Now
               </>
             )}
-          </button>
+            </button>
+          </div>
         </div>
 
         {/* Workflow Info */}
@@ -251,6 +260,25 @@ function PlayIcon() {
       viewBox="0 0 24 24"
     >
       <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+/** Edit icon */
+function EditIcon() {
+  return (
+    <svg
+      className="mr-2 h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+      />
     </svg>
   );
 }

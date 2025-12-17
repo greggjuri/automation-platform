@@ -52,12 +52,12 @@
   - [x] Triggers CDK stack
   - [x] EventBridge rule management in API
   - [x] Unit tests (12 tests)
-- [ ] Deploy and test end-to-end (cron + webhook)
-- [ ] Add manual trigger button to UI
-- [ ] Test full workflow: webhook → transform → notify
+- [x] Deploy and test end-to-end (cron + webhook)
+- [x] Add manual trigger button to UI
+- [x] Test full workflow: webhook → transform → notify
 
 ### Phase 4: Polish
-- [ ] Workflow create/edit UI (currently API-only)
+- [x] Workflow create/edit UI (PRP-007)
 - [ ] Error handling and retry logic
 - [ ] Secrets management UI
 - [ ] Workflow enable/disable
@@ -85,6 +85,7 @@
 | Frontend Deployment | 2025-12-14 | CDK frontend_stack.py: S3 + CloudFront + Route 53 for automations.jurigregg.com |
 | PRP-005: Webhook Trigger + Notify Action | 2025-12-16 | Webhook receiver Lambda, Notify action Lambda (Discord), CDK updates, 34 unit tests |
 | PRP-006: Cron Trigger | 2025-12-16 | Cron handler Lambda, triggers_stack.py, EventBridge rule management in API, 12 unit tests |
+| PRP-007: Workflow Create/Edit UI | 2025-12-16 | Form-based workflow editor with React Hook Form, step config components, toast notifications |
 
 ## Blockers
 

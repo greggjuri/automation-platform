@@ -5,20 +5,49 @@
  */
 
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { WorkflowsPage, WorkflowDetailPage, ExecutionDetailPage } from './pages';
+import { Toaster } from 'react-hot-toast';
+import {
+  WorkflowsPage,
+  WorkflowDetailPage,
+  WorkflowCreatePage,
+  WorkflowEditPage,
+  ExecutionDetailPage,
+} from './pages';
 
 /**
  * Root application component with route definitions.
  */
 function App() {
   return (
-    <Routes>
-      {/* Redirect root to workflows */}
-      <Route path="/" element={<Navigate to="/workflows" replace />} />
+    <>
+      {/* Toast notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1e293b',
+            color: '#f1f5f9',
+            border: '1px solid #334155',
+          },
+          success: {
+            iconTheme: { primary: '#22c55e', secondary: '#f1f5f9' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' },
+          },
+        }}
+      />
 
-      {/* Workflow routes */}
-      <Route path="/workflows" element={<WorkflowsPage />} />
-      <Route path="/workflows/:workflowId" element={<WorkflowDetailPage />} />
+      <Routes>
+        {/* Redirect root to workflows */}
+        <Route path="/" element={<Navigate to="/workflows" replace />} />
+
+        {/* Workflow routes */}
+        <Route path="/workflows" element={<WorkflowsPage />} />
+        <Route path="/workflows/new" element={<WorkflowCreatePage />} />
+        <Route path="/workflows/:workflowId" element={<WorkflowDetailPage />} />
+        <Route path="/workflows/:workflowId/edit" element={<WorkflowEditPage />} />
 
       {/* Execution routes */}
       <Route
@@ -44,7 +73,8 @@ function App() {
           </div>
         }
       />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

@@ -8,7 +8,7 @@
 export type TriggerType = 'manual' | 'webhook' | 'cron' | 'poll';
 
 /** Step action types */
-export type StepType = 'http_request' | 'transform' | 'log';
+export type StepType = 'http_request' | 'transform' | 'log' | 'notify';
 
 /**
  * Workflow trigger configuration.
@@ -64,4 +64,61 @@ export interface WorkflowListResponse {
   workflows: Workflow[];
   /** Total count */
   count: number;
+}
+
+// =============================================================================
+// Form Types (for create/edit UI)
+// =============================================================================
+
+/** Form data for creating/editing a workflow */
+export interface WorkflowFormData {
+  name: string;
+  description: string;
+  enabled: boolean;
+  trigger: TriggerFormData;
+  steps: StepFormData[];
+}
+
+/** Trigger configuration in form */
+export interface TriggerFormData {
+  type: 'manual' | 'webhook' | 'cron';
+  config: {
+    schedule?: string; // For cron type
+  };
+}
+
+/** Step configuration in form */
+export interface StepFormData {
+  step_id: string;
+  name: string;
+  type: StepType;
+  config: HttpRequestConfig | TransformConfig | LogConfig | NotifyConfig;
+}
+
+/** HTTP Request step config */
+export interface HttpRequestConfig {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  url: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+/** Transform step config */
+export interface TransformConfig {
+  template: string;
+  output_key?: string;
+}
+
+/** Log step config */
+export interface LogConfig {
+  message: string;
+  level: 'info' | 'warn' | 'error';
+}
+
+/** Notify step config */
+export interface NotifyConfig {
+  channel: 'discord';
+  webhook_url: string;
+  message: string;
+  embed?: boolean;
 }

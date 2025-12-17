@@ -4,3 +4,4 @@
 
 export * from './useWorkflows';
 export * from './useExecutions';
+export * from './useWorkflowMutations';
