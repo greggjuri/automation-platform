@@ -174,14 +174,17 @@ def update_execution_with_results(
     """
     timestamp = get_current_timestamp()
 
-    update_expr = "SET #status = :status, steps = :steps, finished_at = :finished_at, updated_at = :updated_at"
+    update_expr = "SET #status = :status, #steps = :steps, finished_at = :finished_at, updated_at = :updated_at"
     expr_values: dict[str, Any] = {
         ":status": status,
         ":steps": steps,
         ":finished_at": timestamp,
         ":updated_at": timestamp,
     }
-    expr_names = {"#status": "status"}
+    expr_names = {
+        "#status": "status",
+        "#steps": "steps",  # Reserved word
+    }
 
     if error:
         update_expr += ", #error = :error"
