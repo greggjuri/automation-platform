@@ -47,7 +47,8 @@ def execute_transform(config: dict, context: dict) -> dict:
     # Check for template mode
     if "template" in config:
         template = config["template"]
-        output_key = config.get("output_key", "result")
+        # Use "result" if output_key is missing or empty string
+        output_key = config.get("output_key") or "result"
 
         logger.info("Executing template transform", output_key=output_key)
 
