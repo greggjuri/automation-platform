@@ -47,18 +47,25 @@
 - [x] Add Notify action to Step Functions state machine
 - [x] Unit tests for webhook receiver (19 tests)
 - [x] Unit tests for notify action (15 tests)
-- [ ] Deploy and test end-to-end
-- [ ] Implement EventBridge cron rule creation
+- [x] Implement EventBridge cron trigger (PRP-006)
+  - [x] Cron handler Lambda
+  - [x] Triggers CDK stack
+  - [x] EventBridge rule management in API
+  - [x] Unit tests (12 tests)
+- [ ] Deploy and test end-to-end (cron + webhook)
 - [ ] Add manual trigger button to UI
 - [ ] Test full workflow: webhook → transform → notify
 
 ### Phase 4: Polish
+- [ ] Workflow create/edit UI (currently API-only)
 - [ ] Error handling and retry logic
 - [ ] Secrets management UI
 - [ ] Workflow enable/disable
 - [ ] Polling trigger
 - [ ] Frontend styling and UX improvements
-- [ ] Documentation and README
+- [ ] README.md and architecture docs
+- [ ] User guide (plain English, examples)
+- [ ] API reference documentation
 
 ## Completed Tasks
 
@@ -77,6 +84,7 @@
 | Step Results Persistence | 2025-12-14 | Parse SFN output, extract step results with name/type/status/output/error, persist to DynamoDB |
 | Frontend Deployment | 2025-12-14 | CDK frontend_stack.py: S3 + CloudFront + Route 53 for automations.jurigregg.com |
 | PRP-005: Webhook Trigger + Notify Action | 2025-12-16 | Webhook receiver Lambda, Notify action Lambda (Discord), CDK updates, 34 unit tests |
+| PRP-006: Cron Trigger | 2025-12-16 | Cron handler Lambda, triggers_stack.py, EventBridge rule management in API, 12 unit tests |
 
 ## Blockers
 

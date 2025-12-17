@@ -14,6 +14,7 @@ from aws_cdk import BundlingOptions, CfnOutput, Duration, RemovalPolicy, Stack
 from aws_cdk import aws_apigatewayv2 as apigwv2
 from aws_cdk import aws_apigatewayv2_integrations as integrations
 from aws_cdk import aws_dynamodb as dynamodb
+from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_sqs as sqs
@@ -41,6 +42,7 @@ class ApiStack(Stack):
         workflows_table: dynamodb.ITable,
         executions_table: dynamodb.ITable | None = None,
         execution_queue: sqs.IQueue | None = None,
+        cron_handler_arn: str | None = None,
         environment: str = "dev",
         **kwargs,
     ) -> None:
@@ -52,6 +54,7 @@ class ApiStack(Stack):
             workflows_table: DynamoDB table for workflows
             executions_table: DynamoDB table for executions (optional)
             execution_queue: SQS queue for execution requests (optional)
+            cron_handler_arn: ARN of cron handler Lambda for EventBridge rules
             environment: Deployment environment (dev, staging, prod)
             **kwargs: Additional stack options
         """
@@ -61,6 +64,7 @@ class ApiStack(Stack):
         self.workflows_table = workflows_table
         self.executions_table = executions_table
         self.execution_queue = execution_queue
+        self.cron_handler_arn = cron_handler_arn
 
         # Create Lambda functions
         self._create_lambda(workflows_table)
@@ -108,6 +112,10 @@ class ApiStack(Stack):
         if self.execution_queue:
             env_vars["EXECUTION_QUEUE_URL"] = self.execution_queue.queue_url
 
+        # Add cron handler ARN for EventBridge rule creation
+        if self.cron_handler_arn:
+            env_vars["CRON_HANDLER_LAMBDA_ARN"] = self.cron_handler_arn
+
         # Lambda function for API handling
         self.api_handler = lambda_.Function(
             self,
@@ -151,6 +159,23 @@ class ApiStack(Stack):
         # Grant SQS send permissions if queue available
         if self.execution_queue:
             self.execution_queue.grant_send_messages(self.api_handler)
+
+        # Grant EventBridge permissions for cron trigger management
+        if self.cron_handler_arn:
+            self.api_handler.add_to_role_policy(
+                iam.PolicyStatement(
+                    actions=[
+                        "events:PutRule",
+                        "events:DeleteRule",
+                        "events:PutTargets",
+                        "events:RemoveTargets",
+                        "events:DescribeRule",
+                    ],
+                    resources=[
+                        f"arn:aws:events:{self.region}:{self.account}:rule/automations-{self.env_name}-*"
+                    ],
+                )
+            )
 
     def _create_webhook_receiver(self) -> None:
         """Create the Webhook Receiver Lambda function."""

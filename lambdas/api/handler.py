@@ -23,6 +23,7 @@ from models import (
     generate_workflow_id,
     get_current_timestamp,
 )
+from eventbridge import delete_schedule_rule, sync_workflow_rule
 from repository import (
     create_workflow,
     delete_workflow,
@@ -150,6 +151,21 @@ def create_workflow_handler() -> dict:
     created = create_workflow(item)
     logger.info("Workflow created", workflow_id=workflow_id)
 
+    # Create EventBridge rule if cron trigger
+    try:
+        sync_workflow_rule(
+            workflow_id=workflow_id,
+            old_trigger=None,  # New workflow, no old trigger
+            new_trigger=workflow_data.trigger,
+        )
+    except Exception as e:
+        # Log but don't fail the request - rule can be created on next update
+        logger.warning(
+            "Failed to create EventBridge rule",
+            workflow_id=workflow_id,
+            error=str(e),
+        )
+
     return created
 
 
@@ -169,6 +185,11 @@ def update_workflow_handler(workflow_id: str) -> dict:
         BadRequestError: If request body is invalid
     """
     logger.info("Updating workflow", workflow_id=workflow_id)
+
+    # Get current workflow to check trigger changes
+    current = get_workflow(workflow_id)
+    if not current:
+        raise NotFoundError(f"Workflow {workflow_id} not found")
 
     # Parse and validate request body
     try:
@@ -199,6 +220,22 @@ def update_workflow_handler(workflow_id: str) -> dict:
 
     logger.info("Workflow updated", workflow_id=workflow_id)
 
+    # Sync EventBridge rule if trigger changed
+    if update_data.trigger is not None:
+        try:
+            sync_workflow_rule(
+                workflow_id=workflow_id,
+                old_trigger=current.get("trigger"),
+                new_trigger=update_data.trigger,
+            )
+        except Exception as e:
+            # Log but don't fail the request
+            logger.warning(
+                "Failed to sync EventBridge rule",
+                workflow_id=workflow_id,
+                error=str(e),
+            )
+
     return updated
 
 
@@ -218,12 +255,30 @@ def delete_workflow_handler(workflow_id: str) -> dict:
     """
     logger.info("Deleting workflow", workflow_id=workflow_id)
 
+    # Get workflow first to check trigger type
+    workflow = get_workflow(workflow_id)
+    if not workflow:
+        raise NotFoundError(f"Workflow {workflow_id} not found")
+
+    # Delete from DynamoDB
     deleted = delete_workflow(workflow_id)
 
     if not deleted:
         raise NotFoundError(f"Workflow {workflow_id} not found")
 
     logger.info("Workflow deleted", workflow_id=workflow_id)
+
+    # Clean up EventBridge rule if cron trigger
+    if workflow.get("trigger", {}).get("type") == "cron":
+        try:
+            delete_schedule_rule(workflow_id)
+        except Exception as e:
+            # Log but don't fail - rule deletion is best effort
+            logger.warning(
+                "Failed to delete EventBridge rule",
+                workflow_id=workflow_id,
+                error=str(e),
+            )
 
     return {"message": f"Workflow {workflow_id} deleted", "workflow_id": workflow_id}
 
