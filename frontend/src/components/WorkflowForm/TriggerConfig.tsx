@@ -27,7 +27,7 @@ const CRON_EXAMPLES = [
  * Trigger type selector and configuration.
  */
 export function TriggerConfig({ workflowId, apiBaseUrl }: TriggerConfigProps) {
-  const { register, watch } = useFormContext<WorkflowFormData>();
+  const { register, watch, setValue } = useFormContext<WorkflowFormData>();
 
   const triggerType = watch('trigger.type');
 
@@ -130,15 +130,7 @@ export function TriggerConfig({ workflowId, apiBaseUrl }: TriggerConfigProps) {
                 <button
                   key={example.value}
                   type="button"
-                  onClick={() => {
-                    const input = document.querySelector<HTMLInputElement>(
-                      'input[name="trigger.config.schedule"]'
-                    );
-                    if (input) {
-                      input.value = example.value;
-                      input.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                  }}
+                  onClick={() => setValue('trigger.config.schedule', example.value, { shouldDirty: true })}
                   className="px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded hover:bg-slate-600 transition-colors"
                 >
                   {example.label}
