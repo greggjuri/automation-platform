@@ -40,7 +40,7 @@
 - SSM permissions for secrets (warning in logs when no secrets configured)
 - Interpolation error handling for missing variables
 
-### Phase 3: Triggers (In Progress)
+### Phase 3: Triggers ✅ COMPLETE
 - [x] Implement webhook receiver Lambda
 - [x] Add webhook route to API Gateway (POST /webhook/{workflow_id})
 - [x] Implement Notify action Lambda (Discord webhook)
@@ -93,6 +93,9 @@
 | Step context key fix | 2025-12-17 | Use step.name instead of step_id for context keys (e.g., steps.fetch_data.output) |
 | Delete workflow UI | 2025-12-17 | Red Delete button with confirmation modal on workflow detail page |
 | Frontend display bug fixes | 2025-12-17 | WorkflowCard trigger/steps, ExecutionDetail step status by name, empty trigger message |
+| Transform action output_key fix | 2025-12-17 | Handle empty string output_key from frontend with `or "result"` fallback |
+| TriggerConfig cron buttons | 2025-12-17 | Use React Hook Form setValue() instead of DOM manipulation for cron example buttons |
+| EventBridge InputTransformer | 2025-12-17 | Pass EventBridge $.time to cron handler via InputTransformer for trigger_data.scheduled_time |
 
 ## Blockers
 

@@ -302,6 +302,50 @@ Key intrinsic functions used:
 
 ---
 
+## ADR-010: EventBridge InputTransformer for Cron Triggers
+
+**Date:** 2025-12-17
+**Status:** Accepted
+
+### Context
+When EventBridge triggers the cron handler Lambda, we need to pass the scheduled time to the execution so it appears in `trigger_data.scheduled_time`. Originally, the EventBridge rule target used static `Input` which only contained `workflow_id` and `source`, losing the EventBridge event's `time` field.
+
+### Options Considered
+1. **Static Input** - Pass fixed JSON payload (loses event data)
+2. **InputTransformer** - Extract fields from EventBridge event and compose custom payload
+3. **Pass full event** - Let Lambda parse the entire EventBridge event
+
+### Decision
+Use `InputTransformer` to extract `$.time` from the EventBridge event and include it in the Lambda input.
+
+### Implementation
+```python
+events_client.put_targets(
+    Rule=rule_name,
+    Targets=[{
+        "Id": "cron-handler",
+        "Arn": CRON_HANDLER_ARN,
+        "InputTransformer": {
+            "InputPathsMap": {"time": "$.time"},
+            "InputTemplate": '{"workflow_id": "wf_xxx", "source": "...", "time": <time>}',
+        },
+    }],
+)
+```
+
+### Rationale
+- InputTransformer allows selecting specific fields from the EventBridge event
+- More efficient than passing the full event and parsing in Lambda
+- Clear separation of what data the Lambda expects
+- `<time>` placeholder is replaced with the actual string value by EventBridge
+
+### Consequences
+- Existing EventBridge rules must be updated by re-saving the workflow
+- InputTemplate syntax requires careful escaping (no quotes around `<var>` placeholders)
+- Adds slight complexity to rule creation code
+
+---
+
 ## Template for New Decisions
 
 ```markdown
