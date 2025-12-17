@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { useWorkflow, useExecutions, useExecuteWorkflow } from '../hooks';
 import { useDeleteWorkflow } from '../hooks/useWorkflowMutations';
 import { Layout } from '../components/layout';
-import { LoadingSpinner, ErrorMessage, StatusBadge } from '../components/common';
+import { LoadingSpinner, ErrorMessage, StatusBadge, Button } from '../components/common';
 import { ExecutionList } from '../components/executions';
 
 /**
@@ -90,79 +90,49 @@ export function WorkflowDetailPage() {
       <nav className="mb-4">
         <Link
           to="/workflows"
-          className="text-sm text-slate-400 hover:text-white transition-colors"
+          className="text-sm text-[#c0c0c0] hover:text-[#e8e8e8] transition-colors"
         >
           ← Back to Workflows
         </Link>
       </nav>
 
       {/* Workflow Header */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 mb-6">
+      <div className="glass-card p-6 mb-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white">{workflow.name}</h1>
+              <h1 className="text-2xl font-bold text-[#e8e8e8]">{workflow.name}</h1>
               <StatusBadge
                 status={workflow.enabled ? 'success' : 'pending'}
                 size="sm"
               />
             </div>
             {workflow.description && (
-              <p className="mt-2 text-slate-400">{workflow.description}</p>
+              <p className="mt-2 text-[#c0c0c0]">{workflow.description}</p>
             )}
           </div>
 
           <div className="flex gap-2">
-            <Link
-              to={`/workflows/${workflowId}/edit`}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-slate-700 text-white hover:bg-slate-600 transition-colors"
-            >
-              <EditIcon />
-              Edit
+            <Link to={`/workflows/${workflowId}/edit`}>
+              <Button variant="secondary" leftIcon={<EditIcon />}>
+                Edit
+              </Button>
             </Link>
-            <button
+            <Button
+              variant="danger"
               onClick={() => setShowDeleteModal(true)}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+              leftIcon={<TrashIcon />}
             >
-              <TrashIcon />
               Delete
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleRunNow}
-              disabled={executeWorkflow.isPending}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              isLoading={executeWorkflow.isPending}
+              leftIcon={<PlayIcon />}
             >
-            {executeWorkflow.isPending ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Running...
-              </>
-            ) : (
-              <>
-                <PlayIcon />
-                Run Now
-              </>
-            )}
-            </button>
+              {executeWorkflow.isPending ? 'Running...' : 'Run Now'}
+            </Button>
           </div>
         </div>
 
@@ -210,20 +180,20 @@ export function WorkflowDetailPage() {
       </div>
 
       {/* Steps Section */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Steps</h2>
+      <div className="glass-card p-6 mb-6">
+        <h2 className="text-lg font-semibold text-[#e8e8e8] mb-4">Steps</h2>
         <div className="space-y-3">
           {workflow.steps.map((step, index) => (
             <div
               key={step.step_id}
-              className="flex items-center gap-4 p-3 bg-slate-700/50 rounded-lg"
+              className="flex items-center gap-4 p-3 bg-white/[0.02] border border-white/5 rounded-lg"
             >
-              <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-slate-600 text-xs font-medium text-slate-300">
+              <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-white/10 text-xs font-medium text-[#c0c0c0]">
                 {index + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white">{step.name}</p>
-                <p className="text-sm text-slate-400">{step.type}</p>
+                <p className="font-medium text-[#e8e8e8]">{step.name}</p>
+                <p className="text-sm text-[#c0c0c0]">{step.type}</p>
               </div>
             </div>
           ))}
@@ -231,8 +201,8 @@ export function WorkflowDetailPage() {
       </div>
 
       {/* Execution History */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Execution History</h2>
+      <div className="glass-card p-6">
+        <h2 className="text-lg font-semibold text-[#e8e8e8] mb-4">Execution History</h2>
 
         {executionsLoading ? (
           <LoadingSpinner size="sm" label="Loading executions..." />
@@ -246,32 +216,32 @@ export function WorkflowDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowDeleteModal(false)}
           />
           {/* Modal */}
-          <div className="relative bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-white mb-2">
+          <div className="relative glass-card p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#e8e8e8] mb-2">
               Delete Workflow
             </h3>
-            <p className="text-slate-400 mb-6">
+            <p className="text-[#c0c0c0] mb-6">
               Are you sure you want to delete "{workflow.name}"? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleteWorkflow.isPending}
-                className="px-4 py-2 text-sm font-medium rounded-md bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 transition-colors"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={handleDelete}
-                disabled={deleteWorkflow.isPending}
-                className="px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+                isLoading={deleteWorkflow.isPending}
               >
                 {deleteWorkflow.isPending ? 'Deleting...' : 'Delete'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -284,8 +254,8 @@ export function WorkflowDetailPage() {
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-sm text-slate-400">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-white">{value}</dd>
+      <dt className="text-sm text-[#c0c0c0]">{label}</dt>
+      <dd className="mt-1 text-sm font-medium text-[#e8e8e8]">{value}</dd>
     </div>
   );
 }
@@ -318,7 +288,7 @@ function formatDate(isoDate: string): string {
 function PlayIcon() {
   return (
     <svg
-      className="mr-2 h-4 w-4"
+      className="h-4 w-4"
       xmlns="http://www.w3.org/2000/svg"
       fill="currentColor"
       viewBox="0 0 24 24"
@@ -332,7 +302,7 @@ function PlayIcon() {
 function EditIcon() {
   return (
     <svg
-      className="mr-2 h-4 w-4"
+      className="h-4 w-4"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -351,7 +321,7 @@ function EditIcon() {
 function TrashIcon() {
   return (
     <svg
-      className="mr-2 h-4 w-4"
+      className="h-4 w-4"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"

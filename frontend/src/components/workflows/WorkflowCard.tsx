@@ -1,7 +1,7 @@
 /**
  * Workflow card component.
  *
- * Displays a single workflow summary in a card format.
+ * Displays a single workflow summary in a card format with glass styling.
  */
 
 import { Link } from 'react-router-dom';
@@ -31,15 +31,15 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
   return (
     <Link
       to={`/workflows/${workflow.workflow_id}`}
-      className="block bg-slate-800 rounded-lg border border-slate-700 p-6 hover:border-slate-600 transition-colors"
+      className="block glass-card p-6 hover:bg-white/[0.05] hover:border-white/[0.15]"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-white truncate">
+          <h3 className="text-lg font-semibold text-[#e8e8e8] truncate">
             {workflow.name}
           </h3>
           {workflow.description && (
-            <p className="mt-1 text-sm text-slate-400 line-clamp-2">
+            <p className="mt-1 text-sm text-[#c0c0c0] line-clamp-2">
               {workflow.description}
             </p>
           )}
@@ -47,7 +47,7 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
         <StatusBadge status={workflow.enabled ? 'success' : 'pending'} size="sm" />
       </div>
 
-      <div className="mt-4 flex items-center gap-4 text-sm text-slate-400">
+      <div className="mt-4 flex items-center gap-4 text-sm text-[#c0c0c0]">
         <div className="flex items-center gap-1.5">
           <TriggerIcon />
           <span>{triggerLabel}</span>
@@ -58,7 +58,7 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
         </div>
       </div>
 
-      <div className="mt-3 text-xs text-slate-500">
+      <div className="mt-3 text-xs text-[#c0c0c0]/60">
         Updated {formatDate(workflow.updated_at)}
       </div>
     </Link>

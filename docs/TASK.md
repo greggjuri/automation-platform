@@ -59,10 +59,14 @@
 ### Phase 4: Polish
 - [x] Workflow create/edit UI (PRP-007)
 - [x] Secrets management UI (PRP-009)
-- [ ] Error handling and retry logic
+- [x] Frontend styling and UX improvements (PRP-010)
+  - [x] Glass button component with variants
+  - [x] Centralized error handling utility
+  - [x] Retry button for failed executions
+  - [x] Failed step highlighting
+  - [x] Pure black background + silver text theme
 - [ ] Workflow enable/disable
 - [ ] Polling trigger
-- [ ] Frontend styling and UX improvements
 - [ ] VariableHelper: show trigger-specific fields (webhook: payload/headers, cron: scheduled_time)
 - [ ] README.md and architecture docs
 - [ ] User guide (plain English, examples)
@@ -97,6 +101,8 @@
 | TriggerConfig cron buttons | 2025-12-17 | Use React Hook Form setValue() instead of DOM manipulation for cron example buttons |
 | EventBridge InputTransformer | 2025-12-17 | Pass EventBridge $.time to cron handler via InputTransformer for trigger_data.scheduled_time |
 | PRP-009: Secrets Management UI | 2025-12-17 | Full-stack secrets CRUD: SSM SecureString storage, API endpoints (GET/POST/DELETE /secrets), SecretsPage, AddSecretModal, DeleteSecretModal, 14 unit tests |
+| SSM secrets path alignment | 2025-12-17 | Fixed path mismatch: API was writing to /automations/ but execution_starter reading from /automation/ |
+| PRP-010: Frontend Polish | 2025-12-17 | Glass button component, error handler utility, retry button for failed executions, failed step highlighting, pure black theme |
 
 ## Blockers
 

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" style="overflow:hidden">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Juri Gregg - Software Engineer">
+  <title>Juri Gregg</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Juri Gregg">
+  <meta property="og:description" content="Software Engineer - Apps and Games">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://jurigregg.com">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Juri Gregg">
+  <meta name="twitter:description" content="Software Engineer - Apps and Games">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div class="loader">
+    <span class="loader__text">jg</span>
+  </div>
+
+  <div class="page page--loading">
+    <!-- Floating Keywords Container -->
+    <div class="keywords" id="keywords"></div>
+
+    <!-- Main Content -->
+    <main class="content">
+      <header class="content__header">
+        <h1 class="content__title">jur<span class="title__i">i</span> gregg</h1>
+      </header>
+
+      <!-- Tech Animation -->
+      <div class="circuit" id="circuit">
+        <canvas id="circuit-canvas"></canvas>
+      </div>
+
+      <nav class="content__nav">
+        <div class="button-wrap">
+          <a href="apps.html" class="button">
+            <span>Apps</span>
+          </a>
+          <div class="button-shadow"></div>
+        </div>
+
+        <div class="button-wrap">
+          <a href="games.html" class="button">
+            <span>Games</span>
+          </a>
+          <div class="button-shadow"></div>
+        </div>
+      </nav>
+    </main>
+  </div>
+
+  <script src="js/loader.js"></script>
+  <script src="js/keywords.js"></script>
+  <script src="js/circuit.js"></script>
+  <script src="js/transition.js"></script>
+</body>
+</html>

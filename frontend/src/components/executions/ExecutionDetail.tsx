@@ -4,8 +4,13 @@
  * Shows full execution details including step results.
  */
 
-import type { Execution, ExecutionStep } from '../../types';
-import { StatusBadge } from '../common';
+import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import type { Execution, ExecutionStep, ExecuteResponse } from '../../types';
+import { StatusBadge, Button } from '../common';
+import { apiClient } from '../../api/client';
+import { executionKeys } from '../../hooks/useExecutions';
 
 interface ExecutionDetailProps {
   /** Execution data to display */
@@ -24,41 +29,80 @@ interface ExecutionDetailProps {
  * ```
  */
 export function ExecutionDetail({ execution }: ExecutionDetailProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const duration = calculateDuration(execution.started_at, execution.finished_at);
+
+  // Retry mutation
+  const retryMutation = useMutation({
+    mutationFn: async (): Promise<ExecuteResponse> => {
+      const response = await apiClient.post<ExecuteResponse>(
+        `/workflows/${execution.workflow_id}/execute`,
+        { trigger_data: execution.trigger_data || {} }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success('Workflow re-triggered successfully');
+      // Invalidate executions list
+      queryClient.invalidateQueries({
+        queryKey: executionKeys.all(execution.workflow_id),
+      });
+      // Navigate to the new execution
+      navigate(
+        `/workflows/${execution.workflow_id}/executions/${data.execution_id}`
+      );
+    },
+  });
 
   return (
     <div className="space-y-6">
       {/* Summary Card */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Execution Summary</h2>
-          <StatusBadge status={execution.status} />
+          <h2 className="text-lg font-semibold text-[#e8e8e8]">
+            Execution Summary
+          </h2>
+          <div className="flex items-center gap-3">
+            {execution.status === 'failed' && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => retryMutation.mutate()}
+                isLoading={retryMutation.isPending}
+                leftIcon={<RetryIcon />}
+              >
+                Retry
+              </Button>
+            )}
+            <StatusBadge status={execution.status} />
+          </div>
         </div>
 
         <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
-            <dt className="text-sm text-slate-400">Execution ID</dt>
-            <dd className="mt-1 text-sm font-mono text-white break-all">
+            <dt className="text-sm text-[#c0c0c0]">Execution ID</dt>
+            <dd className="mt-1 text-sm font-mono text-[#e8e8e8] break-all">
               {execution.execution_id}
             </dd>
           </div>
           <div>
-            <dt className="text-sm text-slate-400">Started</dt>
-            <dd className="mt-1 text-sm text-white">
+            <dt className="text-sm text-[#c0c0c0]">Started</dt>
+            <dd className="mt-1 text-sm text-[#e8e8e8]">
               {formatDateTime(execution.started_at)}
             </dd>
           </div>
           <div>
-            <dt className="text-sm text-slate-400">Completed</dt>
-            <dd className="mt-1 text-sm text-white">
+            <dt className="text-sm text-[#c0c0c0]">Completed</dt>
+            <dd className="mt-1 text-sm text-[#e8e8e8]">
               {execution.finished_at
                 ? formatDateTime(execution.finished_at)
                 : 'In progress...'}
             </dd>
           </div>
           <div>
-            <dt className="text-sm text-slate-400">Duration</dt>
-            <dd className="mt-1 text-sm text-white">{duration}</dd>
+            <dt className="text-sm text-[#c0c0c0]">Duration</dt>
+            <dd className="mt-1 text-sm text-[#e8e8e8]">{duration}</dd>
           </div>
         </dl>
 
@@ -74,11 +118,11 @@ export function ExecutionDetail({ execution }: ExecutionDetailProps) {
       </div>
 
       {/* Steps Timeline */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Steps</h2>
+      <div className="glass-card p-6">
+        <h2 className="text-lg font-semibold text-[#e8e8e8] mb-4">Steps</h2>
 
         {execution.steps.length === 0 ? (
-          <p className="text-sm text-slate-400">No step details available.</p>
+          <p className="text-sm text-[#c0c0c0]">No step details available.</p>
         ) : (
           <div className="space-y-4">
             {execution.steps.map((step, index) => (
@@ -89,16 +133,18 @@ export function ExecutionDetail({ execution }: ExecutionDetailProps) {
       </div>
 
       {/* Trigger Data */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Trigger Data</h2>
+      <div className="glass-card p-6">
+        <h2 className="text-lg font-semibold text-[#e8e8e8] mb-4">
+          Trigger Data
+        </h2>
         {isTriggerDataEmpty(execution.trigger_data) ? (
-          <p className="text-sm text-slate-400 italic">
+          <p className="text-sm text-[#c0c0c0] italic">
             {execution.trigger_type === 'manual'
               ? 'Manual trigger (no data)'
               : 'No trigger data available'}
           </p>
         ) : (
-          <pre className="p-4 bg-slate-900 rounded-lg overflow-x-auto text-sm text-slate-300 font-mono">
+          <pre className="p-4 bg-black/50 rounded-lg overflow-x-auto text-sm text-[#c0c0c0] font-mono border border-white/5">
             {JSON.stringify(execution.trigger_data, null, 2)}
           </pre>
         )}
@@ -107,18 +153,40 @@ export function ExecutionDetail({ execution }: ExecutionDetailProps) {
   );
 }
 
-/** Single step card */
+/** Single step card with failure highlighting */
 function StepCard({ step, index }: { step: ExecutionStep; index: number }) {
+  const isFailed = step.status === 'failed';
+
   return (
-    <div className="border border-slate-700 rounded-lg overflow-hidden">
-      <div className="flex items-center justify-between p-4 bg-slate-700/30">
+    <div
+      className={`border rounded-lg overflow-hidden transition-colors ${
+        isFailed
+          ? 'border-red-500/50 bg-red-500/5'
+          : 'border-white/10 bg-white/[0.02]'
+      }`}
+    >
+      <div
+        className={`flex items-center justify-between p-4 ${
+          isFailed ? 'bg-red-500/10' : 'bg-white/[0.03]'
+        }`}
+      >
         <div className="flex items-center gap-3">
-          <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-slate-600 text-xs font-medium text-slate-300">
+          <span
+            className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-xs font-medium ${
+              isFailed
+                ? 'bg-red-500/20 text-red-400'
+                : 'bg-white/10 text-[#c0c0c0]'
+            }`}
+          >
             {index + 1}
           </span>
           <div>
-            <p className="font-medium text-white">{step.name || step.step_id}</p>
-            {step.type && <p className="text-xs text-slate-400">{step.type}</p>}
+            <p className="font-medium text-[#e8e8e8]">
+              {step.name || step.step_id}
+            </p>
+            {step.type && (
+              <p className="text-xs text-[#c0c0c0]">{step.type}</p>
+            )}
           </div>
         </div>
         <StatusBadge status={step.status} size="sm" />
@@ -128,7 +196,7 @@ function StepCard({ step, index }: { step: ExecutionStep; index: number }) {
       <div className="p-4 space-y-3">
         {/* Timing */}
         {step.started_at && (
-          <div className="flex gap-4 text-xs text-slate-400">
+          <div className="flex gap-4 text-xs text-[#c0c0c0]">
             <span>Started: {formatDateTime(step.started_at)}</span>
             {step.finished_at && (
               <span>
@@ -141,8 +209,8 @@ function StepCard({ step, index }: { step: ExecutionStep; index: number }) {
         {/* Output */}
         {step.output && (
           <div>
-            <p className="text-xs font-medium text-slate-400 mb-1">Output</p>
-            <pre className="p-3 bg-slate-900 rounded text-xs text-slate-300 font-mono overflow-x-auto max-h-48">
+            <p className="text-xs font-medium text-[#c0c0c0] mb-1">Output</p>
+            <pre className="p-3 bg-black/50 rounded text-xs text-[#c0c0c0] font-mono overflow-x-auto max-h-48 border border-white/5">
               {typeof step.output === 'string'
                 ? step.output
                 : JSON.stringify(step.output, null, 2)}
@@ -164,6 +232,26 @@ function StepCard({ step, index }: { step: ExecutionStep; index: number }) {
   );
 }
 
+/** Retry icon */
+function RetryIcon() {
+  return (
+    <svg
+      className="w-4 h-4"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+      />
+    </svg>
+  );
+}
+
 /** Check if trigger data is empty or null */
 function isTriggerDataEmpty(data?: Record<string, unknown>): boolean {
   if (!data) return true;
@@ -171,7 +259,10 @@ function isTriggerDataEmpty(data?: Record<string, unknown>): boolean {
 }
 
 /** Calculate duration between two timestamps */
-function calculateDuration(startedAt: string, completedAt?: string | null): string {
+function calculateDuration(
+  startedAt: string,
+  completedAt?: string | null
+): string {
   const start = new Date(startedAt).getTime();
   const end = completedAt ? new Date(completedAt).getTime() : Date.now();
   const durationMs = end - start;

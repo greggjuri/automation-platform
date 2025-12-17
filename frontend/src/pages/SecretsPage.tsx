@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { useSecrets, useCreateSecret, useDeleteSecret } from '../hooks/useSecrets';
 import { Layout } from '../components/layout';
-import { LoadingSpinner, ErrorMessage } from '../components/common';
+import { LoadingSpinner, ErrorMessage, Button } from '../components/common';
 import { SecretCard, AddSecretModal, DeleteSecretModal } from '../components/secrets';
 import type { CreateSecretRequest } from '../types';
 
@@ -46,26 +46,26 @@ export function SecretsPage() {
     <Layout>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Secrets</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-2xl font-bold text-[#e8e8e8]">Secrets</h1>
+          <p className="mt-1 text-sm text-[#c0c0c0]">
             Manage credentials and API keys for your workflows
           </p>
         </div>
-        <button
+        <Button
+          variant="primary"
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          leftIcon={<PlusIcon />}
         >
-          <PlusIcon />
           Add Secret
-        </button>
+        </Button>
       </div>
 
       {/* Info box */}
-      <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-        <p className="text-sm text-slate-400">
+      <div className="mb-6 p-4 glass-card">
+        <p className="text-sm text-[#c0c0c0]">
           Secrets are stored encrypted in AWS SSM Parameter Store. Use them in your
           workflows with{' '}
-          <code className="px-1.5 py-0.5 bg-slate-900 rounded text-blue-400 text-xs">
+          <code className="px-1.5 py-0.5 bg-black/50 rounded text-blue-400 text-xs border border-white/10">
             {'{{secrets.secret_name}}'}
           </code>
         </p>
@@ -122,20 +122,16 @@ export function SecretsPage() {
 function EmptyState({ onAddClick }: { onAddClick: () => void }) {
   return (
     <div className="text-center py-12">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 border border-white/10 mb-4">
         <LockIcon />
       </div>
-      <h3 className="text-lg font-medium text-white mb-1">No secrets yet</h3>
-      <p className="text-sm text-slate-400 mb-4">
+      <h3 className="text-lg font-medium text-[#e8e8e8] mb-1">No secrets yet</h3>
+      <p className="text-sm text-[#c0c0c0] mb-4">
         Add your first secret to use in workflows
       </p>
-      <button
-        onClick={onAddClick}
-        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-      >
-        <PlusIcon />
+      <Button variant="primary" onClick={onAddClick} leftIcon={<PlusIcon />}>
         Add Secret
-      </button>
+      </Button>
     </div>
   );
 }
@@ -143,7 +139,7 @@ function EmptyState({ onAddClick }: { onAddClick: () => void }) {
 function PlusIcon() {
   return (
     <svg
-      className="mr-2 h-4 w-4"
+      className="h-4 w-4"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -161,7 +157,7 @@ function PlusIcon() {
 function LockIcon() {
   return (
     <svg
-      className="w-8 h-8 text-slate-500"
+      className="w-8 h-8 text-[#c0c0c0]"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
