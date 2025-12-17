@@ -89,14 +89,20 @@ export function ExecutionDetail({ execution }: ExecutionDetailProps) {
       </div>
 
       {/* Trigger Data */}
-      {execution.trigger_data && (
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Trigger Data</h2>
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+        <h2 className="text-lg font-semibold text-white mb-4">Trigger Data</h2>
+        {isTriggerDataEmpty(execution.trigger_data) ? (
+          <p className="text-sm text-slate-400 italic">
+            {execution.trigger_type === 'manual'
+              ? 'Manual trigger (no data)'
+              : 'No trigger data available'}
+          </p>
+        ) : (
           <pre className="p-4 bg-slate-900 rounded-lg overflow-x-auto text-sm text-slate-300 font-mono">
             {JSON.stringify(execution.trigger_data, null, 2)}
           </pre>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -156,6 +162,12 @@ function StepCard({ step, index }: { step: ExecutionStep; index: number }) {
       </div>
     </div>
   );
+}
+
+/** Check if trigger data is empty or null */
+function isTriggerDataEmpty(data?: Record<string, unknown>): boolean {
+  if (!data) return true;
+  return Object.keys(data).length === 0;
 }
 
 /** Calculate duration between two timestamps */

@@ -265,7 +265,9 @@ def parse_step_results(
     # Build steps array in workflow order
     for idx, step_def in enumerate(workflow_steps):
         step_id = step_def.get("step_id", f"step_{idx}")
-        step_data = context_steps.get(step_id, {})
+        step_name = step_def.get("name", step_id)
+        # Step results are stored by step name (human-readable) in Step Functions context
+        step_data = context_steps.get(step_name, {})
 
         # Determine step status
         if failed_step_index is not None:
@@ -275,7 +277,7 @@ def parse_step_results(
                 step_status = "failed"
             else:
                 step_status = "skipped"
-        elif step_id in context_steps:
+        elif step_name in context_steps:
             step_status = "success"
         else:
             step_status = "skipped"

@@ -74,8 +74,11 @@ def list_workflows() -> list[dict[str, Any]]:
     logger.info("Scanning workflows table")
 
     response = table.scan(
-        ProjectionExpression="workflow_id, #n, description, enabled, created_at, updated_at",
-        ExpressionAttributeNames={"#n": "name"},  # 'name' is a reserved word
+        ProjectionExpression="workflow_id, #n, description, enabled, #t, steps, created_at, updated_at",
+        ExpressionAttributeNames={
+            "#n": "name",  # 'name' is a reserved word
+            "#t": "trigger",  # 'trigger' is a reserved word
+        },
     )
 
     items = response.get("Items", [])
