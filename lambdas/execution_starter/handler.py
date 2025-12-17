@@ -380,6 +380,8 @@ def process_record(record: SQSRecord) -> None:
         "Processing execution request",
         workflow_id=workflow_id,
         trigger_type=trigger_type,
+        trigger_data=trigger_data,  # Debug: log what we received
+        raw_body_keys=list(body.keys()),  # Debug: see all keys in message
     )
 
     # Fetch workflow

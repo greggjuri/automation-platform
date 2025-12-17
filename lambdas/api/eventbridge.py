@@ -70,18 +70,23 @@ def create_schedule_rule(workflow_id: str, schedule: str) -> None:
     )
 
     # Set target to cron handler Lambda
+    # Use InputTransformer to include EventBridge time in the event
     events_client.put_targets(
         Rule=rule_name,
         Targets=[
             {
                 "Id": "cron-handler",
                 "Arn": CRON_HANDLER_ARN,
-                "Input": json.dumps(
-                    {
+                "InputTransformer": {
+                    "InputPathsMap": {
+                        "time": "$.time",
+                    },
+                    "InputTemplate": json.dumps({
                         "workflow_id": workflow_id,
                         "source": "eventbridge-schedule",
-                    }
-                ),
+                        "time": "<time>",
+                    }).replace('"<time>"', '<time>'),  # InputTemplate uses <var> without quotes for strings
+                },
             }
         ],
     )

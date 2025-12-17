@@ -157,6 +157,7 @@ def handler(event: dict, context: LambdaContext) -> dict:
         workflow_id=workflow_id,
         execution_id=execution_id,
         schedule=schedule,
+        trigger_data=trigger_data,  # Debug: log full trigger_data
     )
 
     queue_execution(workflow_id, execution_id, trigger_data)
