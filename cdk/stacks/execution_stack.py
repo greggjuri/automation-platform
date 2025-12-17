@@ -370,7 +370,7 @@ class ExecutionStack(Stack):
                     "trigger.$": "$.context.trigger",
                     "secrets.$": "$.context.secrets",
                     # Merge previous steps with new step output
-                    "steps.$": "States.JsonMerge($.context.steps, States.StringToJson(States.Format('\\{\"{}\":\\{\"output\":{}\\}\\}', $.step.step_id, States.JsonToString($.step_result.output))), false)",
+                    "steps.$": "States.JsonMerge($.context.steps, States.StringToJson(States.Format('\\{\"{}\":\\{\"output\":{}\\}\\}', $.step.name, States.JsonToString($.step_result.output))), false)",
                 },
                 "step_index.$": "States.MathAdd($.step_index, 1)",
                 "total_steps.$": "$.total_steps",
