@@ -63,6 +63,7 @@
 - [ ] Workflow enable/disable
 - [ ] Polling trigger
 - [ ] Frontend styling and UX improvements
+- [ ] VariableHelper: show trigger-specific fields (webhook: payload/headers, cron: scheduled_time)
 - [ ] README.md and architecture docs
 - [ ] User guide (plain English, examples)
 - [ ] API reference documentation
