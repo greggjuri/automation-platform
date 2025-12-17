@@ -4,7 +4,7 @@ Creates:
 - SQS execution queue and DLQ
 - Step Functions Express state machine
 - Execution Starter Lambda (SQS consumer)
-- Action Lambdas (HTTP Request, Transform, Log)
+- Action Lambdas (HTTP Request, Transform, Log, Notify)
 """
 
 import os
@@ -230,6 +230,18 @@ class ExecutionStack(Stack):
         )
         self.executions_table.grant_read_write_data(self.log_lambda)
 
+        # Notify action (Discord, etc.)
+        self.notify_lambda = self._create_lambda_with_logs(
+            id_suffix="action-notify",
+            description="Sends notifications to external services (Discord)",
+            code_path="action_notify",
+            timeout_seconds=60,  # Allow longer for external HTTP calls
+            environment={
+                "EXECUTIONS_TABLE_NAME": self.executions_table.table_name,
+            },
+        )
+        self.executions_table.grant_read_write_data(self.notify_lambda)
+
     def _create_state_machine(self) -> None:
         """Create Step Functions Express state machine.
 
@@ -295,6 +307,15 @@ class ExecutionStack(Stack):
             payload_response_only=True,
         )
 
+        # Notify action task
+        notify_task = tasks.LambdaInvoke(
+            self,
+            "ExecuteNotify",
+            lambda_function=self.notify_lambda,
+            result_path="$.step_result",
+            payload_response_only=True,
+        )
+
         # Skip unknown step types
         skip_unknown = sfn.Pass(
             self,
@@ -321,6 +342,10 @@ class ExecutionStack(Stack):
         route_by_type.when(
             sfn.Condition.string_equals("$.step.type", "log"),
             log_task,
+        )
+        route_by_type.when(
+            sfn.Condition.string_equals("$.step.type", "notify"),
+            notify_task,
         )
         route_by_type.otherwise(skip_unknown)
 
@@ -364,6 +389,7 @@ class ExecutionStack(Stack):
         http_request_task.next(check_step_result)
         transform_task.next(check_step_result)
         log_task.next(check_step_result)
+        notify_task.next(check_step_result)
         skip_unknown.next(check_step_result)
 
         # Check if more steps to process

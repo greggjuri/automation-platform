@@ -2,14 +2,15 @@
 
 Creates:
 - Lambda function for API handling
+- Webhook Receiver Lambda for external webhooks
 - HTTP API Gateway with CORS
-- Routes for workflow CRUD and execution operations
-- CloudWatch log group
+- Routes for workflow CRUD, execution, and webhook operations
+- CloudWatch log groups
 """
 
 import os
 
-from aws_cdk import CfnOutput, Duration, RemovalPolicy, Stack
+from aws_cdk import BundlingOptions, CfnOutput, Duration, RemovalPolicy, Stack
 from aws_cdk import aws_apigatewayv2 as apigwv2
 from aws_cdk import aws_apigatewayv2_integrations as integrations
 from aws_cdk import aws_dynamodb as dynamodb
@@ -18,13 +19,17 @@ from aws_cdk import aws_logs as logs
 from aws_cdk import aws_sqs as sqs
 from constructs import Construct
 
+# Path to lambdas directory
+LAMBDAS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "lambdas")
+
 
 class ApiStack(Stack):
-    """CDK Stack for API Gateway and Lambda function.
+    """CDK Stack for API Gateway and Lambda functions.
 
     Attributes:
         api: The HTTP API Gateway
-        api_handler: The Lambda function handling requests
+        api_handler: The Lambda function handling API requests
+        webhook_receiver: The Lambda function handling webhook requests
         api_url: The API endpoint URL
     """
 
@@ -53,11 +58,13 @@ class ApiStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         self.env_name = environment
+        self.workflows_table = workflows_table
         self.executions_table = executions_table
         self.execution_queue = execution_queue
 
-        # Create Lambda function
+        # Create Lambda functions
         self._create_lambda(workflows_table)
+        self._create_webhook_receiver()
 
         # Create HTTP API Gateway
         self._create_api_gateway()
@@ -145,6 +152,64 @@ class ApiStack(Stack):
         if self.execution_queue:
             self.execution_queue.grant_send_messages(self.api_handler)
 
+    def _create_webhook_receiver(self) -> None:
+        """Create the Webhook Receiver Lambda function."""
+        function_name = f"{self.env_name}-automation-webhook-receiver"
+
+        # Create log group
+        log_group = logs.LogGroup(
+            self,
+            "WebhookReceiverLogs",
+            log_group_name=f"/aws/lambda/{function_name}",
+            retention=logs.RetentionDays.TWO_WEEKS,
+            removal_policy=RemovalPolicy.DESTROY,
+        )
+
+        # Build environment variables
+        env_vars = {
+            "WORKFLOWS_TABLE_NAME": self.workflows_table.table_name,
+            "ENVIRONMENT": self.env_name,
+            "POWERTOOLS_SERVICE_NAME": "webhook-receiver",
+            "POWERTOOLS_LOG_LEVEL": "INFO" if self.env_name == "prod" else "DEBUG",
+        }
+
+        # Add execution queue URL if available
+        if self.execution_queue:
+            env_vars["EXECUTION_QUEUE_URL"] = self.execution_queue.queue_url
+
+        # Lambda function for webhook handling
+        self.webhook_receiver = lambda_.Function(
+            self,
+            "WebhookReceiver",
+            function_name=function_name,
+            description="Receives webhooks and queues workflow executions",
+            runtime=lambda_.Runtime.PYTHON_3_11,
+            handler="handler.handler",
+            code=lambda_.Code.from_asset(
+                path=os.path.join(LAMBDAS_DIR, "webhook_receiver"),
+                bundling=BundlingOptions(
+                    image=lambda_.Runtime.PYTHON_3_11.bundling_image,
+                    command=[
+                        "bash",
+                        "-c",
+                        "pip install -r requirements.txt -t /asset-output && cp -r . /asset-output",
+                    ],
+                ),
+            ),
+            memory_size=256,
+            timeout=Duration.seconds(10),  # Quick response for webhooks
+            environment=env_vars,
+            log_group=log_group,
+            tracing=lambda_.Tracing.ACTIVE,
+        )
+
+        # Grant DynamoDB read permissions (only need to check workflow exists)
+        self.workflows_table.grant_read_data(self.webhook_receiver)
+
+        # Grant SQS send permissions if queue available
+        if self.execution_queue:
+            self.execution_queue.grant_send_messages(self.webhook_receiver)
+
     def _create_api_gateway(self) -> None:
         """Create the HTTP API Gateway with routes."""
         # Determine CORS origins based on environment
@@ -228,4 +293,20 @@ class ApiStack(Stack):
             path="/workflows/{workflow_id}/executions/{execution_id}",
             methods=[apigwv2.HttpMethod.GET],
             integration=api_integration,
+        )
+
+        # ---------------------------------------------------------------------
+        # Webhook Routes (separate Lambda)
+        # ---------------------------------------------------------------------
+
+        webhook_integration = integrations.HttpLambdaIntegration(
+            "WebhookIntegration",
+            handler=self.webhook_receiver,
+        )
+
+        # Webhook receiver - POST /webhook/{workflow_id}
+        self.api.add_routes(
+            path="/webhook/{workflow_id}",
+            methods=[apigwv2.HttpMethod.POST],
+            integration=webhook_integration,
         )

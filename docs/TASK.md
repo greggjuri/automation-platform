@@ -40,12 +40,16 @@
 - SSM permissions for secrets (warning in logs when no secrets configured)
 - Interpolation error handling for missing variables
 
-### Phase 3: Triggers
-- [ ] Create triggers_stack.py
-- [ ] Implement webhook receiver Lambda
+### Phase 3: Triggers (In Progress)
+- [x] Implement webhook receiver Lambda
+- [x] Add webhook route to API Gateway (POST /webhook/{workflow_id})
+- [x] Implement Notify action Lambda (Discord webhook)
+- [x] Add Notify action to Step Functions state machine
+- [x] Unit tests for webhook receiver (19 tests)
+- [x] Unit tests for notify action (15 tests)
+- [ ] Deploy and test end-to-end
 - [ ] Implement EventBridge cron rule creation
 - [ ] Add manual trigger button to UI
-- [ ] Implement Notify action (Discord webhook)
 - [ ] Test full workflow: webhook → transform → notify
 
 ### Phase 4: Polish
@@ -72,6 +76,7 @@
 | PRP-004: Execution History Frontend | 2025-12-14 | React Query hooks, Workflow list/detail pages, Execution list/detail pages, Run Now button, Status badges |
 | Step Results Persistence | 2025-12-14 | Parse SFN output, extract step results with name/type/status/output/error, persist to DynamoDB |
 | Frontend Deployment | 2025-12-14 | CDK frontend_stack.py: S3 + CloudFront + Route 53 for automations.jurigregg.com |
+| PRP-005: Webhook Trigger + Notify Action | 2025-12-16 | Webhook receiver Lambda, Notify action Lambda (Discord), CDK updates, 34 unit tests |
 
 ## Blockers
 
