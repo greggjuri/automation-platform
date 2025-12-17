@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 WORKFLOWS_TABLE_NAME = os.environ.get("WORKFLOWS_TABLE_NAME", "dev-Workflows")
 EXECUTIONS_TABLE_NAME = os.environ.get("EXECUTIONS_TABLE_NAME", "dev-Executions")
 STATE_MACHINE_ARN = os.environ.get("STATE_MACHINE_ARN", "")
-SSM_SECRETS_PATH = os.environ.get("SSM_SECRETS_PATH", "/automation/dev/secrets")
+SSM_SECRETS_PATH = os.environ.get("SSM_SECRETS_PATH", "/automations/dev/secrets/")
 
 # -----------------------------------------------------------------------------
 # Powertools Setup
@@ -337,7 +337,7 @@ def resolve_secrets() -> dict[str, str]:
         ):
             for param in page.get("Parameters", []):
                 # Extract secret name from path
-                # e.g., /automation/dev/secrets/api_key -> api_key
+                # e.g., /automations/dev/secrets/api_key -> api_key
                 name = param["Name"].split("/")[-1]
                 secrets[name] = param["Value"]
 

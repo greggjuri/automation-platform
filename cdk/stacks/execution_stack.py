@@ -451,7 +451,7 @@ class ExecutionStack(Stack):
                 "WORKFLOWS_TABLE_NAME": self.workflows_table.table_name,
                 "EXECUTIONS_TABLE_NAME": self.executions_table.table_name,
                 "STATE_MACHINE_ARN": self.state_machine.state_machine_arn,
-                "SSM_SECRETS_PATH": f"/automation/{self.env_name}/secrets",
+                "SSM_SECRETS_PATH": f"/automations/{self.env_name}/secrets/",
             },
         )
 
@@ -465,7 +465,7 @@ class ExecutionStack(Stack):
             iam.PolicyStatement(
                 actions=["ssm:GetParametersByPath", "ssm:GetParameter"],
                 resources=[
-                    f"arn:aws:ssm:{self.region}:{self.account}:parameter/automation/{self.env_name}/secrets/*"
+                    f"arn:aws:ssm:{self.region}:{self.account}:parameter/automations/{self.env_name}/secrets/*"
                 ],
             )
         )
