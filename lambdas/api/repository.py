@@ -149,14 +149,12 @@ def update_workflow(workflow_id: str, updates: dict[str, Any]) -> dict[str, Any]
 
     for key, value in updates.items():
         if value is not None:
-            # Handle reserved words
-            if key == "name":
-                update_parts.append("#n = :name")
-                expression_values[":name"] = value
-                expression_names["#n"] = "name"
-            else:
-                update_parts.append(f"{key} = :{key}")
-                expression_values[f":{key}"] = value
+            # Use aliases for ALL attributes to handle reserved words
+            # (trigger, name, status, type, data, count are all reserved)
+            alias = f"#{key}"
+            update_parts.append(f"{alias} = :{key}")
+            expression_values[f":{key}"] = value
+            expression_names[alias] = key
 
     if not update_parts:
         # No updates to make, just return existing item
@@ -169,7 +167,7 @@ def update_workflow(workflow_id: str, updates: dict[str, Any]) -> dict[str, Any]
             Key={"workflow_id": workflow_id},
             UpdateExpression=update_expression,
             ExpressionAttributeValues=expression_values,
-            ExpressionAttributeNames=expression_names if expression_names else None,
+            ExpressionAttributeNames=expression_names,
             ConditionExpression="attribute_exists(workflow_id)",
             ReturnValues="ALL_NEW",
         )
