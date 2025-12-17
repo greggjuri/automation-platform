@@ -4,8 +4,11 @@
  * Shows workflow configuration and execution history.
  */
 
-import { useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useWorkflow, useExecutions, useExecuteWorkflow } from '../hooks';
+import { useDeleteWorkflow } from '../hooks/useWorkflowMutations';
 import { Layout } from '../components/layout';
 import { LoadingSpinner, ErrorMessage, StatusBadge } from '../components/common';
 import { ExecutionList } from '../components/executions';
@@ -17,17 +20,35 @@ import { ExecutionList } from '../components/executions';
  */
 export function WorkflowDetailPage() {
   const { workflowId } = useParams<{ workflowId: string }>();
+  const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { data: workflow, isLoading, error, refetch } = useWorkflow(workflowId!);
   const {
     data: executionsData,
     isLoading: executionsLoading,
   } = useExecutions(workflowId!);
   const executeWorkflow = useExecuteWorkflow();
+  const deleteWorkflow = useDeleteWorkflow();
 
   const handleRunNow = () => {
     if (workflowId) {
       executeWorkflow.mutate({ workflowId });
     }
+  };
+
+  const handleDelete = () => {
+    if (!workflowId) return;
+
+    deleteWorkflow.mutate(workflowId, {
+      onSuccess: () => {
+        toast.success('Workflow deleted successfully');
+        navigate('/workflows');
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to delete workflow');
+        setShowDeleteModal(false);
+      },
+    });
   };
 
   if (isLoading) {
@@ -99,6 +120,13 @@ export function WorkflowDetailPage() {
               <EditIcon />
               Edit
             </Link>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+            >
+              <TrashIcon />
+              Delete
+            </button>
             <button
               onClick={handleRunNow}
               disabled={executeWorkflow.isPending}
@@ -212,6 +240,42 @@ export function WorkflowDetailPage() {
           <ExecutionList executions={executions} workflowId={workflowId!} />
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowDeleteModal(false)}
+          />
+          {/* Modal */}
+          <div className="relative bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Delete Workflow
+            </h3>
+            <p className="text-slate-400 mb-6">
+              Are you sure you want to delete "{workflow.name}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteWorkflow.isPending}
+                className="px-4 py-2 text-sm font-medium rounded-md bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteWorkflow.isPending}
+                className="px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {deleteWorkflow.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
@@ -278,6 +342,25 @@ function EditIcon() {
         strokeLinejoin="round"
         strokeWidth={2}
         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+      />
+    </svg>
+  );
+}
+
+/** Trash icon */
+function TrashIcon() {
+  return (
+    <svg
+      className="mr-2 h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
       />
     </svg>
   );
