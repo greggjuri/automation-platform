@@ -90,6 +90,7 @@
 | Step Functions step_id fix | 2025-12-17 | Fixed context merge using $.step.step_id instead of $.step.id in UpdateContext state |
 | DynamoDB reserved words fix | 2025-12-17 | Alias all attribute names in update_workflow to handle reserved words (trigger, status, etc.) |
 | Step context key fix | 2025-12-17 | Use step.name instead of step_id for context keys (e.g., steps.fetch_data.output) |
+| Delete workflow UI | 2025-12-17 | Red Delete button with confirmation modal on workflow detail page |
 
 ## Blockers
 
