@@ -88,6 +88,7 @@
 | PRP-007: Workflow Create/Edit UI | 2025-12-16 | Form-based workflow editor with React Hook Form, step config components, toast notifications |
 | PRP-008: Frontend BucketDeployment | 2025-12-17 | Add BucketDeployment to frontend_stack.py for automatic S3 upload and CloudFront invalidation |
 | Step Functions step_id fix | 2025-12-17 | Fixed context merge using $.step.step_id instead of $.step.id in UpdateContext state |
+| DynamoDB reserved words fix | 2025-12-17 | Alias all attribute names in update_workflow to handle reserved words (trigger, status, etc.) |
 
 ## Blockers
 
