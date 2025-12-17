@@ -28,6 +28,12 @@ export function Header() {
             >
               Workflows
             </Link>
+            <Link
+              to="/secrets"
+              className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Secrets
+            </Link>
           </nav>
         </div>
       </div>

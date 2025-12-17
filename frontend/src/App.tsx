@@ -12,6 +12,7 @@ import {
   WorkflowCreatePage,
   WorkflowEditPage,
   ExecutionDetailPage,
+  SecretsPage,
 } from './pages';
 
 /**
@@ -48,6 +49,9 @@ function App() {
         <Route path="/workflows/new" element={<WorkflowCreatePage />} />
         <Route path="/workflows/:workflowId" element={<WorkflowDetailPage />} />
         <Route path="/workflows/:workflowId/edit" element={<WorkflowEditPage />} />
+
+        {/* Secrets routes */}
+        <Route path="/secrets" element={<SecretsPage />} />
 
       {/* Execution routes */}
       <Route

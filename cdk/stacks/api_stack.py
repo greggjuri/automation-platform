@@ -177,6 +177,23 @@ class ApiStack(Stack):
                 )
             )
 
+        # Grant SSM permissions for secrets management
+        self.api_handler.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "ssm:GetParametersByPath",
+                    "ssm:GetParameter",
+                    "ssm:PutParameter",
+                    "ssm:DeleteParameter",
+                    "ssm:AddTagsToResource",
+                    "ssm:ListTagsForResource",
+                ],
+                resources=[
+                    f"arn:aws:ssm:{self.region}:{self.account}:parameter/automations/*/secrets/*"
+                ],
+            )
+        )
+
     def _create_webhook_receiver(self) -> None:
         """Create the Webhook Receiver Lambda function."""
         function_name = f"{self.env_name}-automation-webhook-receiver"
@@ -334,4 +351,22 @@ class ApiStack(Stack):
             path="/webhook/{workflow_id}",
             methods=[apigwv2.HttpMethod.POST],
             integration=webhook_integration,
+        )
+
+        # ---------------------------------------------------------------------
+        # Secrets Routes
+        # ---------------------------------------------------------------------
+
+        # Secrets collection
+        self.api.add_routes(
+            path="/secrets",
+            methods=[apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+            integration=api_integration,
+        )
+
+        # Single secret
+        self.api.add_routes(
+            path="/secrets/{name}",
+            methods=[apigwv2.HttpMethod.DELETE],
+            integration=api_integration,
         )

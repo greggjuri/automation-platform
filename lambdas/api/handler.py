@@ -13,11 +13,13 @@ from typing import TYPE_CHECKING
 
 import boto3
 from aws_lambda_powertools import Logger, Tracer
+from botocore.exceptions import ClientError
 from aws_lambda_powertools.event_handler import APIGatewayHttpResolver
 from aws_lambda_powertools.event_handler.exceptions import BadRequestError, NotFoundError
 from pydantic import ValidationError
 
 from models import (
+    SecretCreate,
     WorkflowCreate,
     WorkflowUpdate,
     generate_workflow_id,
@@ -48,6 +50,11 @@ app = APIGatewayHttpResolver()
 # SQS client for execution queue
 sqs_client = boto3.client("sqs")
 EXECUTION_QUEUE_URL = os.environ.get("EXECUTION_QUEUE_URL", "")
+
+# SSM client for secrets management
+ssm_client = boto3.client("ssm")
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "dev")
+SECRETS_PATH = f"/automations/{ENVIRONMENT}/secrets/"
 
 
 # -----------------------------------------------------------------------------
@@ -415,6 +422,185 @@ def get_execution_handler(workflow_id: str, execution_id: str) -> dict:
         raise NotFoundError(f"Execution {execution_id} not found")
 
     return execution
+
+
+# -----------------------------------------------------------------------------
+# Secrets Routes
+# -----------------------------------------------------------------------------
+
+
+def mask_secret_value(value: str) -> str:
+    """Mask a secret value, showing only last 4 characters.
+
+    Args:
+        value: The full secret value
+
+    Returns:
+        Masked string like "****abcd"
+    """
+    if len(value) <= 4:
+        return "****"
+    return f"****{value[-4:]}"
+
+
+@app.get("/secrets")
+@tracer.capture_method
+def list_secrets_handler() -> dict:
+    """List all secrets (metadata only, no actual values).
+
+    Returns:
+        Object with secrets array and count
+    """
+    logger.info("Listing secrets")
+
+    secrets = []
+
+    try:
+        # Get all parameters under the secrets path
+        paginator = ssm_client.get_paginator("get_parameters_by_path")
+
+        for page in paginator.paginate(
+            Path=SECRETS_PATH,
+            WithDecryption=True,  # Need to decrypt to get last 4 chars
+        ):
+            for param in page.get("Parameters", []):
+                # Extract name from full path
+                name = param["Name"].replace(SECRETS_PATH, "")
+
+                # Get secret type from tags (default to "custom")
+                secret_type = "custom"
+                try:
+                    tags_response = ssm_client.list_tags_for_resource(
+                        ResourceType="Parameter",
+                        ResourceId=param["Name"],
+                    )
+                    for tag in tags_response.get("TagList", []):
+                        if tag["Key"] == "secret_type":
+                            secret_type = tag["Value"]
+                            break
+                except Exception:
+                    # If we can't get tags, default to custom
+                    pass
+
+                secrets.append({
+                    "name": name,
+                    "secret_type": secret_type,
+                    "masked_value": mask_secret_value(param["Value"]),
+                    "created_at": param.get("LastModifiedDate", "").isoformat()
+                    if param.get("LastModifiedDate")
+                    else "",
+                })
+
+    except ClientError as e:
+        if e.response["Error"]["Code"] != "ParameterNotFound":
+            logger.warning("Error listing secrets", error=str(e))
+        # Return empty list on error
+        pass
+    except Exception as e:
+        logger.warning("Error listing secrets", error=str(e))
+        # Return empty list on error
+        pass
+
+    return {"secrets": secrets, "count": len(secrets)}
+
+
+@app.post("/secrets")
+@tracer.capture_method
+def create_secret_handler() -> dict:
+    """Create a new secret.
+
+    Returns:
+        Created secret metadata
+
+    Raises:
+        BadRequestError: If request body is invalid or secret already exists
+    """
+    logger.info("Creating secret")
+
+    # Parse and validate request body
+    try:
+        body = app.current_event.json_body or {}
+        secret_data = SecretCreate(**body)
+    except ValidationError as e:
+        logger.warning("Validation failed", errors=str(e.errors()))
+        raise BadRequestError(f"Invalid request: {e.errors()}")
+
+    # Build parameter path
+    param_name = f"{SECRETS_PATH}{secret_data.name}"
+
+    # Check if secret already exists
+    try:
+        ssm_client.get_parameter(Name=param_name, WithDecryption=False)
+        raise BadRequestError(f"Secret '{secret_data.name}' already exists")
+    except ClientError as e:
+        if e.response["Error"]["Code"] != "ParameterNotFound":
+            raise
+        # Good - secret doesn't exist yet
+        pass
+
+    # Create the secret
+    try:
+        ssm_client.put_parameter(
+            Name=param_name,
+            Value=secret_data.value,
+            Type="SecureString",
+            Description=f"Secret for automation platform ({secret_data.secret_type})",
+            Tags=[
+                {"Key": "secret_type", "Value": secret_data.secret_type},
+                {"Key": "created_by", "Value": "api"},
+            ],
+        )
+    except Exception as e:
+        logger.exception("Failed to create secret", error=str(e))
+        raise BadRequestError(f"Failed to create secret: {str(e)}")
+
+    logger.info("Secret created", secret_name=secret_data.name)
+
+    return {
+        "name": secret_data.name,
+        "secret_type": secret_data.secret_type,
+        "masked_value": mask_secret_value(secret_data.value),
+        "created_at": get_current_timestamp(),
+        "message": "Secret created successfully",
+    }
+
+
+@app.delete("/secrets/<name>")
+@tracer.capture_method
+def delete_secret_handler(name: str) -> dict:
+    """Delete a secret.
+
+    Args:
+        name: The secret name
+
+    Returns:
+        Confirmation message
+
+    Raises:
+        NotFoundError: If secret doesn't exist
+    """
+    logger.info("Deleting secret", secret_name=name)
+
+    param_name = f"{SECRETS_PATH}{name}"
+
+    # Check if secret exists
+    try:
+        ssm_client.get_parameter(Name=param_name, WithDecryption=False)
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ParameterNotFound":
+            raise NotFoundError(f"Secret '{name}' not found")
+        raise
+
+    # Delete the secret
+    try:
+        ssm_client.delete_parameter(Name=param_name)
+    except Exception as e:
+        logger.exception("Failed to delete secret", error=str(e))
+        raise BadRequestError(f"Failed to delete secret: {str(e)}")
+
+    logger.info("Secret deleted", secret_name=name)
+
+    return {"message": f"Secret '{name}' deleted", "name": name}
 
 
 # -----------------------------------------------------------------------------

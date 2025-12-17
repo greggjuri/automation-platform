@@ -80,6 +80,61 @@ class HealthResponse(BaseModel):
 
 
 # -----------------------------------------------------------------------------
+# Secrets Models
+# -----------------------------------------------------------------------------
+
+
+class SecretCreate(BaseModel):
+    """Request model for creating a secret.
+
+    Validates:
+    - name: lowercase letters, numbers, underscores, 1-63 chars, starts with letter
+    - value: non-empty string up to 4096 chars
+    - secret_type: one of the supported types
+    """
+
+    name: str = Field(
+        ...,
+        pattern=r"^[a-z][a-z0-9_]{0,62}$",
+        description="Secret name (lowercase, underscores, starts with letter)",
+    )
+    value: str = Field(
+        ...,
+        min_length=1,
+        max_length=4096,
+        description="Secret value",
+    )
+    secret_type: str = Field(
+        ...,
+        pattern=r"^(discord_webhook|slack_webhook|api_key|custom)$",
+        description="Type of secret",
+    )
+
+
+class SecretMetadata(BaseModel):
+    """Metadata for a secret (no actual value exposed)."""
+
+    name: str
+    secret_type: str
+    masked_value: str
+    created_at: str
+
+
+class SecretListResponse(BaseModel):
+    """Response model for listing secrets."""
+
+    secrets: list[SecretMetadata]
+    count: int
+
+
+class SecretDeleteResponse(BaseModel):
+    """Response model for delete secret operation."""
+
+    message: str
+    name: str
+
+
+# -----------------------------------------------------------------------------
 # Helper Functions
 # -----------------------------------------------------------------------------
 

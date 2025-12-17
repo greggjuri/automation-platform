@@ -58,8 +58,8 @@
 
 ### Phase 4: Polish
 - [x] Workflow create/edit UI (PRP-007)
+- [x] Secrets management UI (PRP-009)
 - [ ] Error handling and retry logic
-- [ ] Secrets management UI
 - [ ] Workflow enable/disable
 - [ ] Polling trigger
 - [ ] Frontend styling and UX improvements
@@ -96,6 +96,7 @@
 | Transform action output_key fix | 2025-12-17 | Handle empty string output_key from frontend with `or "result"` fallback |
 | TriggerConfig cron buttons | 2025-12-17 | Use React Hook Form setValue() instead of DOM manipulation for cron example buttons |
 | EventBridge InputTransformer | 2025-12-17 | Pass EventBridge $.time to cron handler via InputTransformer for trigger_data.scheduled_time |
+| PRP-009: Secrets Management UI | 2025-12-17 | Full-stack secrets CRUD: SSM SecureString storage, API endpoints (GET/POST/DELETE /secrets), SecretsPage, AddSecretModal, DeleteSecretModal, 14 unit tests |
 
 ## Blockers
 
