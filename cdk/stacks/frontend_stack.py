@@ -2,8 +2,9 @@
 
 Creates:
 - S3 bucket for static assets
-- CloudFront distribution with OAI
+- CloudFront distribution with OAC
 - Route 53 DNS record
+- BucketDeployment to upload frontend/dist on deploy
 """
 
 from aws_cdk import Duration, RemovalPolicy, Stack
@@ -13,6 +14,7 @@ from aws_cdk import aws_cloudfront_origins as cf_origins
 from aws_cdk import aws_route53 as route53
 from aws_cdk import aws_route53_targets as targets
 from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_s3_deployment as s3_deployment
 from constructs import Construct
 
 
@@ -121,4 +123,14 @@ class FrontendStack(Stack):
             target=route53.RecordTarget.from_alias(
                 targets.CloudFrontTarget(self.distribution)
             ),
+        )
+
+        # Deploy frontend assets to S3 and invalidate CloudFront
+        s3_deployment.BucketDeployment(
+            self,
+            "DeployFrontend",
+            sources=[s3_deployment.Source.asset("../frontend/dist")],
+            destination_bucket=self.bucket,
+            distribution=self.distribution,
+            distribution_paths=["/*"],
         )

@@ -86,6 +86,7 @@
 | PRP-005: Webhook Trigger + Notify Action | 2025-12-16 | Webhook receiver Lambda, Notify action Lambda (Discord), CDK updates, 34 unit tests |
 | PRP-006: Cron Trigger | 2025-12-16 | Cron handler Lambda, triggers_stack.py, EventBridge rule management in API, 12 unit tests |
 | PRP-007: Workflow Create/Edit UI | 2025-12-16 | Form-based workflow editor with React Hook Form, step config components, toast notifications |
+| PRP-008: Frontend BucketDeployment | 2025-12-17 | Add BucketDeployment to frontend_stack.py for automatic S3 upload and CloudFront invalidation |
 
 ## Blockers
 
