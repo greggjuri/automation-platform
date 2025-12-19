@@ -65,7 +65,7 @@
   - [x] Retry button for failed executions
   - [x] Failed step highlighting
   - [x] Pure black background + silver text theme
-- [ ] Workflow enable/disable
+- [x] Workflow enable/disable (PRP-011)
 - [ ] Polling trigger
 - [ ] VariableHelper: show trigger-specific fields (webhook: payload/headers, cron: scheduled_time)
 - [ ] README.md and architecture docs
@@ -103,6 +103,7 @@
 | PRP-009: Secrets Management UI | 2025-12-17 | Full-stack secrets CRUD: SSM SecureString storage, API endpoints (GET/POST/DELETE /secrets), SecretsPage, AddSecretModal, DeleteSecretModal, 14 unit tests |
 | SSM secrets path alignment | 2025-12-17 | Fixed path mismatch: API was writing to /automations/ but execution_starter reading from /automation/ |
 | PRP-010: Frontend Polish | 2025-12-17 | Glass button component, error handler utility, retry button for failed executions, failed step highlighting, pure black theme |
+| PRP-011: Workflow Enable/Disable | 2025-12-19 | PATCH /workflows/{id}/enabled endpoint, EventBridge rule enable/disable, ToggleSwitch component, disabled workflow visual feedback, 11 unit tests |
 
 ## Blockers
 

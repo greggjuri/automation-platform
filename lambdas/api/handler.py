@@ -25,7 +25,12 @@ from models import (
     generate_workflow_id,
     get_current_timestamp,
 )
-from eventbridge import delete_schedule_rule, sync_workflow_rule
+from eventbridge import (
+    delete_schedule_rule,
+    disable_schedule_rule,
+    enable_schedule_rule,
+    sync_workflow_rule,
+)
 from repository import (
     create_workflow,
     delete_workflow,
@@ -288,6 +293,66 @@ def delete_workflow_handler(workflow_id: str) -> dict:
             )
 
     return {"message": f"Workflow {workflow_id} deleted", "workflow_id": workflow_id}
+
+
+@app.patch("/workflows/<workflow_id>/enabled")
+@tracer.capture_method
+def toggle_workflow_enabled(workflow_id: str) -> dict:
+    """Toggle workflow enabled/disabled status.
+
+    Args:
+        workflow_id: The workflow identifier
+
+    Returns:
+        Confirmation with new enabled state
+
+    Raises:
+        NotFoundError: If workflow doesn't exist
+        BadRequestError: If request body is invalid
+    """
+    logger.info("Toggling workflow enabled", workflow_id=workflow_id)
+
+    # Get current workflow
+    workflow = get_workflow(workflow_id)
+    if not workflow:
+        raise NotFoundError(f"Workflow {workflow_id} not found")
+
+    # Parse request body
+    body = app.current_event.json_body or {}
+    if "enabled" not in body:
+        raise BadRequestError("Missing 'enabled' field in request body")
+
+    new_enabled = bool(body["enabled"])
+
+    # Update in DynamoDB
+    updates = {
+        "enabled": new_enabled,
+        "updated_at": get_current_timestamp(),
+    }
+    update_workflow(workflow_id, updates)
+
+    # Sync EventBridge rule state if cron trigger
+    if workflow.get("trigger", {}).get("type") == "cron":
+        try:
+            if new_enabled:
+                enable_schedule_rule(workflow_id)
+            else:
+                disable_schedule_rule(workflow_id)
+        except Exception as e:
+            logger.warning(
+                "Failed to sync EventBridge rule state",
+                workflow_id=workflow_id,
+                error=str(e),
+            )
+
+    action = "enabled" if new_enabled else "disabled"
+    logger.info(f"Workflow {action}", workflow_id=workflow_id)
+
+    return {
+        "workflow_id": workflow_id,
+        "enabled": new_enabled,
+        "message": f"Workflow {action}",
+    }
 
 
 # -----------------------------------------------------------------------------

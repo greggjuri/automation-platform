@@ -83,3 +83,48 @@ export function useDeleteWorkflow() {
     },
   });
 }
+
+/** Response from toggle enabled endpoint */
+interface ToggleEnabledResponse {
+  workflow_id: string;
+  enabled: boolean;
+  message: string;
+}
+
+/**
+ * Toggle workflow enabled/disabled status.
+ *
+ * @returns Mutation for toggling workflow enabled state
+ *
+ * @example
+ * ```tsx
+ * const toggleEnabled = useToggleWorkflowEnabled();
+ * toggleEnabled.mutate(
+ *   { workflowId: 'wf_123', enabled: false },
+ *   { onSuccess: () => toast.success('Workflow disabled') }
+ * );
+ * ```
+ */
+export function useToggleWorkflowEnabled() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      workflowId,
+      enabled,
+    }: {
+      workflowId: string;
+      enabled: boolean;
+    }): Promise<ToggleEnabledResponse> => {
+      const response = await apiClient.patch<ToggleEnabledResponse>(
+        `/workflows/${workflowId}/enabled`,
+        { enabled }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: workflowKeys.all });
+      queryClient.invalidateQueries({ queryKey: workflowKeys.detail(data.workflow_id) });
+    },
+  });
+}

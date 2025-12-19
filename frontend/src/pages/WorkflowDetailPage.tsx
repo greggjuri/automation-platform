@@ -8,9 +8,9 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useWorkflow, useExecutions, useExecuteWorkflow } from '../hooks';
-import { useDeleteWorkflow } from '../hooks/useWorkflowMutations';
+import { useDeleteWorkflow, useToggleWorkflowEnabled } from '../hooks/useWorkflowMutations';
 import { Layout } from '../components/layout';
-import { LoadingSpinner, ErrorMessage, StatusBadge, Button } from '../components/common';
+import { LoadingSpinner, ErrorMessage, Button, ToggleSwitch } from '../components/common';
 import { ExecutionList } from '../components/executions';
 
 /**
@@ -29,6 +29,23 @@ export function WorkflowDetailPage() {
   } = useExecutions(workflowId!);
   const executeWorkflow = useExecuteWorkflow();
   const deleteWorkflow = useDeleteWorkflow();
+  const toggleEnabled = useToggleWorkflowEnabled();
+
+  const handleToggleEnabled = (enabled: boolean) => {
+    if (!workflowId) return;
+
+    toggleEnabled.mutate(
+      { workflowId, enabled },
+      {
+        onSuccess: (data) => {
+          toast.success(data.message);
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : 'Failed to toggle workflow');
+        },
+      }
+    );
+  };
 
   const handleRunNow = () => {
     if (workflowId) {
@@ -102,9 +119,11 @@ export function WorkflowDetailPage() {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-[#e8e8e8]">{workflow.name}</h1>
-              <StatusBadge
-                status={workflow.enabled ? 'success' : 'pending'}
-                size="sm"
+              <ToggleSwitch
+                enabled={workflow.enabled}
+                onChange={handleToggleEnabled}
+                isLoading={toggleEnabled.isPending}
+                ariaLabel={workflow.enabled ? 'Disable workflow' : 'Enable workflow'}
               />
             </div>
             {workflow.description && (
@@ -125,14 +144,22 @@ export function WorkflowDetailPage() {
             >
               Delete
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleRunNow}
-              isLoading={executeWorkflow.isPending}
-              leftIcon={<PlayIcon />}
-            >
-              {executeWorkflow.isPending ? 'Running...' : 'Run Now'}
-            </Button>
+            <div className="relative group">
+              <Button
+                variant="primary"
+                onClick={handleRunNow}
+                isLoading={executeWorkflow.isPending}
+                leftIcon={<PlayIcon />}
+                disabled={!workflow.enabled}
+              >
+                {executeWorkflow.isPending ? 'Running...' : 'Run Now'}
+              </Button>
+              {!workflow.enabled && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-[#c0c0c0] bg-black/90 border border-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  Enable workflow to run
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

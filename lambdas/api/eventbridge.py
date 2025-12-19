@@ -94,6 +94,53 @@ def create_schedule_rule(workflow_id: str, schedule: str) -> None:
     logger.info("EventBridge rule created/updated", rule_name=rule_name)
 
 
+def enable_schedule_rule(workflow_id: str) -> None:
+    """Enable the EventBridge rule for a cron workflow.
+
+    This is idempotent - enabling an already-enabled rule has no effect.
+
+    Args:
+        workflow_id: Workflow identifier
+    """
+    rule_name = get_rule_name(workflow_id)
+
+    logger.info(
+        "Enabling EventBridge rule",
+        rule_name=rule_name,
+        workflow_id=workflow_id,
+    )
+
+    try:
+        events_client.enable_rule(Name=rule_name)
+        logger.info("EventBridge rule enabled", rule_name=rule_name)
+    except events_client.exceptions.ResourceNotFoundException:
+        logger.warning("Rule not found, cannot enable", rule_name=rule_name)
+
+
+def disable_schedule_rule(workflow_id: str) -> None:
+    """Disable the EventBridge rule for a cron workflow.
+
+    This is idempotent - disabling an already-disabled rule has no effect.
+    The rule is not deleted, just disabled.
+
+    Args:
+        workflow_id: Workflow identifier
+    """
+    rule_name = get_rule_name(workflow_id)
+
+    logger.info(
+        "Disabling EventBridge rule",
+        rule_name=rule_name,
+        workflow_id=workflow_id,
+    )
+
+    try:
+        events_client.disable_rule(Name=rule_name)
+        logger.info("EventBridge rule disabled", rule_name=rule_name)
+    except events_client.exceptions.ResourceNotFoundException:
+        logger.warning("Rule not found, cannot disable", rule_name=rule_name)
+
+
 def delete_schedule_rule(workflow_id: str) -> None:
     """Delete EventBridge rule for workflow.
 

@@ -28,14 +28,20 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
   const triggerLabel = getTriggerLabel(workflow.trigger?.type);
   const stepCount = workflow.steps?.length ?? 0;
 
+  const isDisabled = !workflow.enabled;
+
   return (
     <Link
       to={`/workflows/${workflow.workflow_id}`}
-      className="block glass-card p-6 hover:bg-white/[0.05] hover:border-white/[0.15]"
+      className={`block glass-card p-6 hover:bg-white/[0.05] hover:border-white/[0.15] transition-opacity ${
+        isDisabled ? 'opacity-60' : ''
+      }`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-[#e8e8e8] truncate">
+          <h3 className={`text-lg font-semibold truncate ${
+            isDisabled ? 'text-[#a0a0a0]' : 'text-[#e8e8e8]'
+          }`}>
             {workflow.name}
           </h3>
           {workflow.description && (
@@ -44,7 +50,14 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
             </p>
           )}
         </div>
-        <StatusBadge status={workflow.enabled ? 'success' : 'pending'} size="sm" />
+        <div className="flex items-center gap-2">
+          {isDisabled && (
+            <span className="px-2 py-0.5 text-xs font-medium text-[#a0a0a0] bg-white/5 border border-white/10 rounded-full">
+              Disabled
+            </span>
+          )}
+          <StatusBadge status={workflow.enabled ? 'success' : 'pending'} size="sm" />
+        </div>
       </div>
 
       <div className="mt-4 flex items-center gap-4 text-sm text-[#c0c0c0]">
