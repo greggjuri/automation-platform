@@ -317,6 +317,13 @@ class ApiStack(Stack):
             integration=api_integration,
         )
 
+        # Workflow enable/disable toggle
+        self.api.add_routes(
+            path="/workflows/{workflow_id}/enabled",
+            methods=[apigwv2.HttpMethod.PATCH],
+            integration=api_integration,
+        )
+
         # Execution routes - trigger execution
         self.api.add_routes(
             path="/workflows/{workflow_id}/execute",
