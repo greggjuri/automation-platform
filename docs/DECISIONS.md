@@ -346,6 +346,41 @@ events_client.put_targets(
 
 ---
 
+## ADR-011: PATCH Endpoint for Workflow Enable/Disable
+
+**Date:** 2025-12-19
+**Status:** Accepted
+
+### Context
+Users need to enable/disable workflows without modifying other workflow properties. The existing PUT endpoint updates the entire workflow, which is heavyweight for a simple toggle.
+
+### Options Considered
+1. **PATCH /workflows/{id}/enabled** - Dedicated endpoint for toggling enabled state
+2. **PUT /workflows/{id}** - Use existing update endpoint with partial body
+3. **POST /workflows/{id}/enable** and **POST /workflows/{id}/disable** - Separate action endpoints
+
+### Decision
+Use `PATCH /workflows/{id}/enabled` with body `{"enabled": true|false}`.
+
+### Rationale
+- PATCH semantically represents partial update (RFC 5789)
+- Single endpoint is simpler than separate enable/disable actions
+- Dedicated endpoint keeps the toggle logic isolated from general workflow updates
+- EventBridge rule state sync only happens in toggle endpoint, not on every PUT
+- Clear API design: GET/POST/PUT/DELETE for CRUD, PATCH for partial updates
+
+### Implementation Details
+- API Gateway HTTP API requires explicit route registration for PATCH
+- CORS must include PATCH in allowed methods
+- IAM policy needs `events:EnableRule` and `events:DisableRule` for cron workflows
+
+### Consequences
+- Additional route to maintain in CDK
+- Consistent pattern for future partial update endpoints (e.g., PATCH /workflows/{id}/name)
+- Clear separation of concerns: toggle vs full update
+
+---
+
 ## Template for New Decisions
 
 ```markdown

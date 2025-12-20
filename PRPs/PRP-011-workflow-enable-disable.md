@@ -1,7 +1,8 @@
 # PRP-011: Workflow Enable/Disable Toggle
 
-> **Status:** Ready
+> **Status:** Complete
 > **Created:** 2025-12-19
+> **Completed:** 2025-12-19
 > **Author:** Claude
 > **Priority:** P2 (Medium)
 
@@ -29,14 +30,14 @@ Add the ability to toggle workflow enabled/disabled status. This includes:
 
 ## Success Criteria
 
-- [ ] Can toggle workflow enabled/disabled from detail page
-- [ ] Disabled workflows show "Disabled" badge in list view
-- [ ] Cron workflows: EventBridge rule is disabled (not deleted) when workflow disabled
-- [ ] Webhook workflows: Returns 503 when triggered while disabled
-- [ ] Manual trigger: "Run Now" button disabled with explanation tooltip
-- [ ] Toast notifications for toggle success/failure
-- [ ] Unit tests for new API endpoint
-- [ ] Unit tests for EventBridge rule state management
+- [x] Can toggle workflow enabled/disabled from detail page
+- [x] Disabled workflows show "Disabled" badge in list view
+- [x] Cron workflows: EventBridge rule is disabled (not deleted) when workflow disabled
+- [x] Webhook workflows: Returns 503 when triggered while disabled (pre-existing)
+- [x] Manual trigger: "Run Now" button disabled with explanation tooltip
+- [x] Toast notifications for toggle success/failure
+- [x] Unit tests for new API endpoint (11 tests)
+- [x] Unit tests for EventBridge rule state management
 
 **Definition of Done:**
 - All success criteria met
