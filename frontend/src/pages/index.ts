@@ -4,3 +4,4 @@ export { WorkflowsPage } from './WorkflowsPage';
 export { WorkflowCreatePage } from './WorkflowCreatePage';
 export { WorkflowEditPage } from './WorkflowEditPage';
 export { SecretsPage } from './SecretsPage';
+export { LoginPage } from './LoginPage';

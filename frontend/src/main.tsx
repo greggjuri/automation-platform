@@ -1,7 +1,7 @@
 /**
  * Application entry point.
  *
- * Sets up React Query provider and renders the main App component.
+ * Sets up React Query provider and Auth provider, then renders the main App component.
  */
 
 import { StrictMode } from 'react';
@@ -11,6 +11,7 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import { handleApiError } from './utils';
+import { AuthProvider } from './lib/auth';
 
 /** React Query client with default options */
 const queryClient = new QueryClient({
@@ -28,10 +29,12 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </AuthProvider>
   </StrictMode>
 );

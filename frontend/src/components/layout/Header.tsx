@@ -1,16 +1,24 @@
 /**
  * Application header component.
  *
- * Displays the app title and navigation links with glass styling.
+ * Displays the app title, navigation links, and auth controls with glass styling.
  */
 
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../lib/auth';
 
 /**
  * Main application header with navigation.
  */
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, signOut, isLoading } = useAuth();
+
+  const handleLogout = () => {
+    signOut();
+    navigate('/workflows');
+  };
 
   return (
     <header className="bg-black/50 backdrop-blur-sm border-b border-white/10">
@@ -27,9 +35,35 @@ export function Header() {
             <NavLink to="/workflows" current={location.pathname}>
               Workflows
             </NavLink>
-            <NavLink to="/secrets" current={location.pathname}>
-              Secrets
-            </NavLink>
+            {isAuthenticated && (
+              <NavLink to="/secrets" current={location.pathname}>
+                Secrets
+              </NavLink>
+            )}
+            <div className="ml-4 flex items-center space-x-2">
+              {isLoading ? (
+                <span className="text-sm text-[#808080]">...</span>
+              ) : isAuthenticated ? (
+                <>
+                  <span className="text-sm text-[#c0c0c0] hidden sm:inline">
+                    {user}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 rounded-full text-sm font-medium text-[#c0c0c0] hover:text-[#e8e8e8] hover:bg-white/5 border border-transparent transition-all duration-300"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="px-4 py-2 rounded-full text-sm font-medium text-[#c0c0c0] hover:text-[#e8e8e8] hover:bg-white/5 border border-transparent transition-all duration-300"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
           </nav>
         </div>
       </div>

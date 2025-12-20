@@ -9,6 +9,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useWorkflow, useExecutions, useExecuteWorkflow } from '../hooks';
 import { useDeleteWorkflow, useToggleWorkflowEnabled } from '../hooks/useWorkflowMutations';
+import { useAuth } from '../lib/auth';
 import { Layout } from '../components/layout';
 import { LoadingSpinner, ErrorMessage, Button, ToggleSwitch } from '../components/common';
 import { ExecutionList } from '../components/executions';
@@ -21,6 +22,7 @@ import { ExecutionList } from '../components/executions';
 export function WorkflowDetailPage() {
   const { workflowId } = useParams<{ workflowId: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { data: workflow, isLoading, error, refetch } = useWorkflow(workflowId!);
   const {
@@ -119,48 +121,61 @@ export function WorkflowDetailPage() {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-[#e8e8e8]">{workflow.name}</h1>
-              <ToggleSwitch
-                enabled={workflow.enabled}
-                onChange={handleToggleEnabled}
-                isLoading={toggleEnabled.isPending}
-                ariaLabel={workflow.enabled ? 'Disable workflow' : 'Enable workflow'}
-              />
+              {isAuthenticated && (
+                <ToggleSwitch
+                  enabled={workflow.enabled}
+                  onChange={handleToggleEnabled}
+                  isLoading={toggleEnabled.isPending}
+                  ariaLabel={workflow.enabled ? 'Disable workflow' : 'Enable workflow'}
+                />
+              )}
+              {!isAuthenticated && (
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  workflow.enabled
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                }`}>
+                  {workflow.enabled ? 'Enabled' : 'Disabled'}
+                </span>
+              )}
             </div>
             {workflow.description && (
               <p className="mt-2 text-[#c0c0c0]">{workflow.description}</p>
             )}
           </div>
 
-          <div className="flex gap-2">
-            <Link to={`/workflows/${workflowId}/edit`}>
-              <Button variant="secondary" leftIcon={<EditIcon />}>
-                Edit
-              </Button>
-            </Link>
-            <Button
-              variant="danger"
-              onClick={() => setShowDeleteModal(true)}
-              leftIcon={<TrashIcon />}
-            >
-              Delete
-            </Button>
-            <div className="relative group">
+          {isAuthenticated && (
+            <div className="flex gap-2">
+              <Link to={`/workflows/${workflowId}/edit`}>
+                <Button variant="secondary" leftIcon={<EditIcon />}>
+                  Edit
+                </Button>
+              </Link>
               <Button
-                variant="primary"
-                onClick={handleRunNow}
-                isLoading={executeWorkflow.isPending}
-                leftIcon={<PlayIcon />}
-                disabled={!workflow.enabled}
+                variant="danger"
+                onClick={() => setShowDeleteModal(true)}
+                leftIcon={<TrashIcon />}
               >
-                {executeWorkflow.isPending ? 'Running...' : 'Run Now'}
+                Delete
               </Button>
-              {!workflow.enabled && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-[#c0c0c0] bg-black/90 border border-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  Enable workflow to run
-                </div>
-              )}
+              <div className="relative group">
+                <Button
+                  variant="primary"
+                  onClick={handleRunNow}
+                  isLoading={executeWorkflow.isPending}
+                  leftIcon={<PlayIcon />}
+                  disabled={!workflow.enabled}
+                >
+                  {executeWorkflow.isPending ? 'Running...' : 'Run Now'}
+                </Button>
+                {!workflow.enabled && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-[#c0c0c0] bg-black/90 border border-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Enable workflow to run
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Workflow Info */}

@@ -13,7 +13,9 @@ import {
   WorkflowEditPage,
   ExecutionDetailPage,
   SecretsPage,
+  LoginPage,
 } from './pages';
+import { ProtectedRoute } from './components/auth';
 
 /**
  * Root application component with route definitions.
@@ -44,14 +46,17 @@ function App() {
         {/* Redirect root to workflows */}
         <Route path="/" element={<Navigate to="/workflows" replace />} />
 
+        {/* Auth routes */}
+        <Route path="/login" element={<LoginPage />} />
+
         {/* Workflow routes */}
         <Route path="/workflows" element={<WorkflowsPage />} />
-        <Route path="/workflows/new" element={<WorkflowCreatePage />} />
+        <Route path="/workflows/new" element={<ProtectedRoute><WorkflowCreatePage /></ProtectedRoute>} />
         <Route path="/workflows/:workflowId" element={<WorkflowDetailPage />} />
-        <Route path="/workflows/:workflowId/edit" element={<WorkflowEditPage />} />
+        <Route path="/workflows/:workflowId/edit" element={<ProtectedRoute><WorkflowEditPage /></ProtectedRoute>} />
 
-        {/* Secrets routes */}
-        <Route path="/secrets" element={<SecretsPage />} />
+        {/* Secrets routes (protected) */}
+        <Route path="/secrets" element={<ProtectedRoute><SecretsPage /></ProtectedRoute>} />
 
       {/* Execution routes */}
       <Route

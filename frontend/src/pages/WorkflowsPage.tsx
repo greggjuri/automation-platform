@@ -6,6 +6,7 @@
 
 import { Link } from 'react-router-dom';
 import { useWorkflows } from '../hooks';
+import { useAuth } from '../lib/auth';
 import { Layout } from '../components/layout';
 import { LoadingSpinner, ErrorMessage, Button } from '../components/common';
 import { WorkflowList } from '../components/workflows';
@@ -17,6 +18,7 @@ import { WorkflowList } from '../components/workflows';
  */
 export function WorkflowsPage() {
   const { data, isLoading, error, refetch } = useWorkflows();
+  const { isAuthenticated } = useAuth();
 
   return (
     <Layout>
@@ -24,14 +26,18 @@ export function WorkflowsPage() {
         <div>
           <h1 className="text-2xl font-bold text-[#e8e8e8]">Workflows</h1>
           <p className="mt-1 text-sm text-[#c0c0c0]">
-            Manage and monitor your automation workflows
+            {isAuthenticated
+              ? 'Manage and monitor your automation workflows'
+              : 'View automation workflows'}
           </p>
         </div>
-        <Link to="/workflows/new">
-          <Button variant="primary" leftIcon={<PlusIcon />}>
-            New Workflow
-          </Button>
-        </Link>
+        {isAuthenticated && (
+          <Link to="/workflows/new">
+            <Button variant="primary" leftIcon={<PlusIcon />}>
+              New Workflow
+            </Button>
+          </Link>
+        )}
       </div>
 
       {isLoading && <LoadingSpinner label="Loading workflows..." />}

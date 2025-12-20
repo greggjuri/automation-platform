@@ -66,7 +66,12 @@
   - [x] Failed step highlighting
   - [x] Pure black background + silver text theme
 - [x] Workflow enable/disable (PRP-011)
-- [ ] Authentication with read-only public access (PRP-012)
+- [x] Authentication with read-only public access (PRP-012)
+  - [x] Cognito setup scripts (setup-cognito.sh, create-admin-user.sh, setup-cognito-authorizer.sh)
+  - [x] Frontend auth library (Cognito SDK integration)
+  - [x] AuthProvider, LoginPage, ProtectedRoute
+  - [x] Auth headers in API client
+  - [x] Conditional UI (read-only public, authenticated actions)
 - [ ] Polling trigger
 - [ ] VariableHelper: show trigger-specific fields (webhook: payload/headers, cron: scheduled_time)
 - [ ] README.md and architecture docs
@@ -108,6 +113,7 @@
 | SSM secrets path alignment | 2025-12-17 | Fixed path mismatch: API was writing to /automations/ but execution_starter reading from /automation/ |
 | PRP-010: Frontend Polish | 2025-12-17 | Glass button component, error handler utility, retry button for failed executions, failed step highlighting, pure black theme |
 | PRP-011: Workflow Enable/Disable | 2025-12-19 | PATCH /workflows/{id}/enabled endpoint, EventBridge rule enable/disable, ToggleSwitch component, disabled workflow visual feedback, 11 unit tests |
+| PRP-012: Authentication | 2025-12-19 | Cognito setup scripts, frontend auth library, AuthProvider, LoginPage, ProtectedRoute, conditional UI for read-only public access |
 
 ## Blockers
 

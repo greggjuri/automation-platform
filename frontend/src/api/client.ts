@@ -3,9 +3,11 @@
  *
  * Provides a pre-configured axios instance for all API calls.
  * Uses VITE_API_URL environment variable or falls back to the deployed API.
+ * Automatically includes JWT auth headers when user is authenticated.
  */
 
 import axios from 'axios';
+import { getAccessToken } from '../lib/auth';
 
 /** Base API URL - can be overridden via environment variable */
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com';
@@ -26,6 +28,20 @@ export const apiClient = axios.create({
   },
   timeout: 30000, // 30 second timeout
 });
+
+// Add request interceptor to include auth token
+apiClient.interceptors.request.use(
+  async (config) => {
+    const token = await getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add response interceptor for error logging
 apiClient.interceptors.response.use(
