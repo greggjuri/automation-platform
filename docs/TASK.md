@@ -66,11 +66,15 @@
   - [x] Failed step highlighting
   - [x] Pure black background + silver text theme
 - [x] Workflow enable/disable (PRP-011)
+- [ ] Authentication with read-only public access (PRP-012)
 - [ ] Polling trigger
 - [ ] VariableHelper: show trigger-specific fields (webhook: payload/headers, cron: scheduled_time)
 - [ ] README.md and architecture docs
 - [ ] User guide (plain English, examples)
 - [ ] API reference documentation
+
+### Cleanup
+- [ ] Delete or .gitignore examples/auth/ files after PRP-012 implementation
 
 ## Completed Tasks
 
