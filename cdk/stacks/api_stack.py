@@ -170,6 +170,8 @@ class ApiStack(Stack):
                         "events:PutTargets",
                         "events:RemoveTargets",
                         "events:DescribeRule",
+                        "events:EnableRule",
+                        "events:DisableRule",
                     ],
                     resources=[
                         f"arn:aws:events:{self.region}:{self.account}:rule/automations-{self.env_name}-*"
