@@ -56,7 +56,9 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
               Disabled
             </span>
           )}
-          <StatusBadge status={workflow.enabled ? 'success' : 'pending'} size="sm" />
+          {workflow.latest_execution_status && (
+            <StatusBadge status={workflow.latest_execution_status} size="sm" />
+          )}
         </div>
       </div>
 
@@ -85,6 +87,7 @@ function getTriggerLabel(type?: string): string {
     webhook: 'Webhook',
     cron: 'Schedule',
     manual: 'Manual',
+    poll: 'Poll',
   };
   return labels[type] || type;
 }

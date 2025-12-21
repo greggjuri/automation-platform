@@ -302,3 +302,30 @@ def get_execution(workflow_id: str, execution_id: str) -> dict[str, Any] | None:
         logger.warning("Execution not found", execution_id=execution_id)
 
     return item
+
+
+def get_latest_execution_status(workflow_id: str) -> str | None:
+    """Get the status of the latest execution for a workflow.
+
+    Args:
+        workflow_id: The workflow identifier
+
+    Returns:
+        Status string ('pending', 'running', 'success', 'failed') or None if no executions
+    """
+    table = get_executions_table()
+
+    # Query for just the latest execution, only fetch status
+    response = table.query(
+        KeyConditionExpression="workflow_id = :wid",
+        ExpressionAttributeValues={":wid": workflow_id},
+        ProjectionExpression="#status",
+        ExpressionAttributeNames={"#status": "status"},
+        Limit=1,
+        ScanIndexForward=False,  # Most recent first (descending by sort key)
+    )
+
+    items = response.get("Items", [])
+    if items:
+        return items[0].get("status")
+    return None

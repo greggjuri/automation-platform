@@ -54,6 +54,8 @@ export interface Workflow {
   created_at: string;
   /** ISO timestamp of last update */
   updated_at: string;
+  /** Status of the most recent execution (from list endpoint) */
+  latest_execution_status?: 'pending' | 'running' | 'success' | 'failed' | null;
 }
 
 /**

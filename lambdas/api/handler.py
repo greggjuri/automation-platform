@@ -36,6 +36,7 @@ from repository import (
     create_workflow,
     delete_workflow,
     get_execution,
+    get_latest_execution_status,
     get_workflow,
     list_executions,
     list_workflows,
@@ -79,7 +80,7 @@ def convert_decimals(obj: Any) -> Any:
         return float(obj)
     if isinstance(obj, dict):
         return {k: convert_decimals(v) for k, v in obj.items()}
-    if isinstance(obj, list):
+    if isinstance(obj, (list, tuple)):
         return [convert_decimals(item) for item in obj]
     return obj
 
@@ -112,7 +113,7 @@ def health_check() -> dict:
 @app.get("/workflows")
 @tracer.capture_method
 def list_workflows_handler() -> dict:
-    """List all workflows.
+    """List all workflows with latest execution status.
 
     Returns:
         Object with workflows array and count
@@ -120,6 +121,13 @@ def list_workflows_handler() -> dict:
     logger.info("Listing workflows")
 
     workflows = list_workflows()
+
+    # Enrich each workflow with latest execution status
+    for workflow in workflows:
+        workflow_id = workflow.get("workflow_id")
+        if workflow_id:
+            status = get_latest_execution_status(workflow_id)
+            workflow["latest_execution_status"] = status
 
     return {"workflows": workflows, "count": len(workflows)}
 
