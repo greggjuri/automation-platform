@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import TYPE_CHECKING
+from decimal import Decimal
+from typing import TYPE_CHECKING, Any
 
 import boto3
 from aws_lambda_powertools import Logger, Tracer
@@ -58,6 +59,31 @@ EXECUTION_QUEUE_URL = os.environ.get("EXECUTION_QUEUE_URL", "")
 
 # SSM client for secrets management
 ssm_client = boto3.client("ssm")
+
+
+def convert_decimals(obj: Any) -> Any:
+    """Recursively convert Decimal types to int/float for JSON serialization.
+
+    DynamoDB returns Decimal for all numeric types. This function converts them
+    to native Python types that json.dumps can serialize.
+
+    Args:
+        obj: Any object that may contain Decimal values
+
+    Returns:
+        Object with Decimals converted to int (if whole number) or float
+    """
+    if isinstance(obj, Decimal):
+        if obj % 1 == 0:
+            return int(obj)
+        return float(obj)
+    if isinstance(obj, dict):
+        return {k: convert_decimals(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [convert_decimals(item) for item in obj]
+    return obj
+
+
 ENVIRONMENT = os.environ.get("ENVIRONMENT", "dev")
 SECRETS_PATH = f"/automations/{ENVIRONMENT}/secrets/"
 
@@ -463,7 +489,7 @@ def list_executions_handler(workflow_id: str) -> dict:
     result = list_executions(workflow_id, limit=limit, last_key=last_key)
 
     return {
-        "executions": result["items"],
+        "executions": convert_decimals(result["items"]),
         "count": len(result["items"]),
         "last_key": result.get("last_key"),
     }
@@ -495,7 +521,7 @@ def get_execution_handler(workflow_id: str, execution_id: str) -> dict:
     if not execution:
         raise NotFoundError(f"Execution {execution_id} not found")
 
-    return execution
+    return convert_decimals(execution)
 
 
 # -----------------------------------------------------------------------------
