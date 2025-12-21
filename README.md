@@ -2,13 +2,22 @@
 
 A personal event-driven automation platform for defining and executing workflows with triggers and actions. Think Zapier or n8n, but self-hosted on AWS serverless.
 
+## Live Demo
+
+- **Frontend:** https://automations.jurigregg.com
+- **API:** https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com
+
+Public visitors can view workflows and executions. Authentication required to create, edit, or delete.
+
 ## Features
 
-- **Triggers:** Webhooks, cron schedules, manual, polling (RSS/HTTP)
-- **Actions:** HTTP requests, transformations, notifications, custom lambdas
+- **Triggers:** Webhooks, cron schedules, manual execution
+- **Actions:** HTTP requests, transformations, Discord notifications
 - **Execution:** Step Functions for reliable orchestration with retries
-- **Monitoring:** Execution history, logs, and error tracking
-- **UI:** React dashboard for workflow management
+- **Monitoring:** Execution history, step-by-step logs, error tracking
+- **Secrets:** Secure storage with SSM Parameter Store
+- **Auth:** Cognito authentication with read-only public access
+- **UI:** React dashboard with glass morphism design
 
 ## Architecture
 
@@ -56,9 +65,31 @@ npm run dev
 
 ### Configuration
 
+#### Backend
 1. Copy `.env.example` to `.env`
 2. Add your AWS account ID and region
 3. Configure secrets in SSM Parameter Store
+
+#### Authentication (Cognito)
+```bash
+# Create Cognito User Pool and Client
+cd scripts
+./setup-cognito.sh
+
+# Create admin user
+./create-admin-user.sh your-email@example.com
+
+# Set up API Gateway authorizer
+./setup-cognito-authorizer.sh
+```
+
+#### Frontend
+Create `frontend/.env.local` with Cognito config:
+```
+VITE_COGNITO_USER_POOL_ID=us-east-1_XXXXXX
+VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxx
+VITE_COGNITO_REGION=us-east-1
+```
 
 ## Project Structure
 
