@@ -84,7 +84,7 @@
 - [ ] API reference documentation
 
 ### Cleanup
-- [ ] Delete or .gitignore examples/auth/ files after PRP-012 implementation
+- [x] Delete or .gitignore examples/auth/ files after PRP-012 implementation
 
 ## Completed Tasks
 
