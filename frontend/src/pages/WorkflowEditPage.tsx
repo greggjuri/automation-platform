@@ -20,14 +20,21 @@ const API_BASE_URL =
  * Convert workflow API response to form data.
  */
 function workflowToFormData(workflow: Workflow): WorkflowFormData {
+  const config = workflow.trigger.config || {};
+
   return {
     name: workflow.name,
     description: workflow.description,
     enabled: workflow.enabled,
     trigger: {
-      type: workflow.trigger.type as 'manual' | 'webhook' | 'cron',
+      type: workflow.trigger.type as 'manual' | 'webhook' | 'cron' | 'poll',
       config: {
-        schedule: (workflow.trigger.config?.schedule as string) || undefined,
+        // Cron config
+        schedule: (config.schedule as string) || undefined,
+        // Poll config
+        url: (config.url as string) || undefined,
+        content_type: (config.content_type as 'rss' | 'atom' | 'http') || undefined,
+        interval_minutes: (config.interval_minutes as number) || undefined,
       },
     },
     steps: workflow.steps.map((step) => ({
