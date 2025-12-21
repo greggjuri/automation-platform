@@ -26,9 +26,9 @@ from models import (
     get_current_timestamp,
 )
 from eventbridge import (
+    delete_poll_rule,
     delete_schedule_rule,
-    disable_schedule_rule,
-    enable_schedule_rule,
+    sync_workflow_enabled,
     sync_workflow_rule,
 )
 from repository import (
@@ -280,14 +280,23 @@ def delete_workflow_handler(workflow_id: str) -> dict:
 
     logger.info("Workflow deleted", workflow_id=workflow_id)
 
-    # Clean up EventBridge rule if cron trigger
-    if workflow.get("trigger", {}).get("type") == "cron":
+    # Clean up EventBridge rule if cron or poll trigger
+    trigger_type = workflow.get("trigger", {}).get("type")
+    if trigger_type == "cron":
         try:
             delete_schedule_rule(workflow_id)
         except Exception as e:
-            # Log but don't fail - rule deletion is best effort
             logger.warning(
-                "Failed to delete EventBridge rule",
+                "Failed to delete cron EventBridge rule",
+                workflow_id=workflow_id,
+                error=str(e),
+            )
+    elif trigger_type == "poll":
+        try:
+            delete_poll_rule(workflow_id)
+        except Exception as e:
+            logger.warning(
+                "Failed to delete poll EventBridge rule",
                 workflow_id=workflow_id,
                 error=str(e),
             )
@@ -331,19 +340,19 @@ def toggle_workflow_enabled(workflow_id: str) -> dict:
     }
     update_workflow(workflow_id, updates)
 
-    # Sync EventBridge rule state if cron trigger
-    if workflow.get("trigger", {}).get("type") == "cron":
-        try:
-            if new_enabled:
-                enable_schedule_rule(workflow_id)
-            else:
-                disable_schedule_rule(workflow_id)
-        except Exception as e:
-            logger.warning(
-                "Failed to sync EventBridge rule state",
-                workflow_id=workflow_id,
-                error=str(e),
-            )
+    # Sync EventBridge rule state for cron/poll triggers
+    try:
+        sync_workflow_enabled(
+            workflow_id,
+            workflow.get("trigger"),
+            new_enabled,
+        )
+    except Exception as e:
+        logger.warning(
+            "Failed to sync EventBridge rule state",
+            workflow_id=workflow_id,
+            error=str(e),
+        )
 
     action = "enabled" if new_enabled else "disabled"
     logger.info(f"Workflow {action}", workflow_id=workflow_id)

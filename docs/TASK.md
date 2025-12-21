@@ -72,7 +72,12 @@
   - [x] AuthProvider, LoginPage, ProtectedRoute
   - [x] Auth headers in API client
   - [x] Conditional UI (read-only public, authenticated actions)
-- [ ] Polling trigger
+- [x] Polling trigger (PRP-013)
+  - [x] Poller Lambda with RSS/Atom/HTTP parsing
+  - [x] CDK stack updates for Poller Lambda
+  - [x] EventBridge poll rule management in API
+  - [x] Frontend TriggerConfig poll trigger UI
+  - [x] Unit tests (25 tests)
 - [ ] VariableHelper: show trigger-specific fields (webhook: payload/headers, cron: scheduled_time)
 - [ ] README.md and architecture docs
 - [ ] User guide (plain English, examples)
@@ -115,6 +120,7 @@
 | PRP-011: Workflow Enable/Disable | 2025-12-19 | PATCH /workflows/{id}/enabled endpoint, EventBridge rule enable/disable, ToggleSwitch component, disabled workflow visual feedback, 11 unit tests |
 | PRP-012: Authentication | 2025-12-19 | Cognito setup scripts, frontend auth library, AuthProvider, LoginPage, ProtectedRoute, conditional UI for read-only public access |
 | Frontend build optimization | 2025-12-21 | Fixed CSS @import order warning, implemented lazy loading for routes to reduce bundle size (509KB → 402KB) |
+| PRP-013: Polling Trigger | 2025-12-21 | Poller Lambda (RSS/Atom/HTTP), CDK stack, EventBridge poll rules, frontend UI, 25 unit tests |
 
 ## Blockers
 

@@ -43,6 +43,7 @@ class ApiStack(Stack):
         executions_table: dynamodb.ITable | None = None,
         execution_queue: sqs.IQueue | None = None,
         cron_handler_arn: str | None = None,
+        poller_arn: str | None = None,
         environment: str = "dev",
         **kwargs,
     ) -> None:
@@ -55,6 +56,7 @@ class ApiStack(Stack):
             executions_table: DynamoDB table for executions (optional)
             execution_queue: SQS queue for execution requests (optional)
             cron_handler_arn: ARN of cron handler Lambda for EventBridge rules
+            poller_arn: ARN of poller Lambda for polling EventBridge rules
             environment: Deployment environment (dev, staging, prod)
             **kwargs: Additional stack options
         """
@@ -65,6 +67,7 @@ class ApiStack(Stack):
         self.executions_table = executions_table
         self.execution_queue = execution_queue
         self.cron_handler_arn = cron_handler_arn
+        self.poller_arn = poller_arn
 
         # Create Lambda functions
         self._create_lambda(workflows_table)
@@ -112,9 +115,11 @@ class ApiStack(Stack):
         if self.execution_queue:
             env_vars["EXECUTION_QUEUE_URL"] = self.execution_queue.queue_url
 
-        # Add cron handler ARN for EventBridge rule creation
+        # Add trigger handler ARNs for EventBridge rule creation
         if self.cron_handler_arn:
             env_vars["CRON_HANDLER_LAMBDA_ARN"] = self.cron_handler_arn
+        if self.poller_arn:
+            env_vars["POLLER_LAMBDA_ARN"] = self.poller_arn
 
         # Lambda function for API handling
         self.api_handler = lambda_.Function(

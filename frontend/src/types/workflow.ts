@@ -81,9 +81,12 @@ export interface WorkflowFormData {
 
 /** Trigger configuration in form */
 export interface TriggerFormData {
-  type: 'manual' | 'webhook' | 'cron';
+  type: 'manual' | 'webhook' | 'cron' | 'poll';
   config: {
     schedule?: string; // For cron type
+    url?: string; // For poll type
+    interval_minutes?: number; // For poll type
+    content_type?: 'rss' | 'atom' | 'http'; // For poll type
   };
 }
 

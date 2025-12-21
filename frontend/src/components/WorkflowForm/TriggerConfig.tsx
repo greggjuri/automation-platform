@@ -51,6 +51,7 @@ export function TriggerConfig({ workflowId, apiBaseUrl }: TriggerConfigProps) {
           <option value="manual">Manual</option>
           <option value="webhook">Webhook</option>
           <option value="cron">Schedule (Cron)</option>
+          <option value="poll">Poll (RSS/HTTP)</option>
         </select>
       </div>
 
@@ -137,6 +138,76 @@ export function TriggerConfig({ workflowId, apiBaseUrl }: TriggerConfigProps) {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Poll - URL polling configuration */}
+      {triggerType === 'poll' && (
+        <div className="space-y-4">
+          {/* URL to Poll */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              URL to Poll <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="url"
+              {...register('trigger.config.url', {
+                required: triggerType === 'poll',
+              })}
+              placeholder="https://example.com/feed.xml"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              URL of RSS/Atom feed or HTTP endpoint to monitor for changes
+            </p>
+          </div>
+
+          {/* Content Type */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Content Type
+            </label>
+            <select
+              {...register('trigger.config.content_type')}
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="rss">RSS Feed</option>
+              <option value="atom">Atom Feed</option>
+              <option value="http">HTTP (detect any change)</option>
+            </select>
+            <p className="mt-1 text-xs text-slate-400">
+              RSS/Atom: Triggers on new items. HTTP: Triggers when content hash changes.
+            </p>
+          </div>
+
+          {/* Poll Interval */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Poll Interval (minutes)
+            </label>
+            <input
+              type="number"
+              min={5}
+              {...register('trigger.config.interval_minutes', {
+                valueAsNumber: true,
+                min: 5,
+              })}
+              defaultValue={15}
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              Minimum: 5 minutes. How often to check for updates.
+            </p>
+          </div>
+
+          {/* Info about trigger data */}
+          <div className="p-3 bg-slate-800 rounded-md border border-slate-700">
+            <p className="text-xs text-slate-400">
+              <strong className="text-slate-300">Trigger data available:</strong><br />
+              RSS/Atom: <code className="text-blue-400">{'{{trigger.items}}'}</code> - array of new items with title, link, guid<br />
+              HTTP: <code className="text-blue-400">{'{{trigger.content}}'}</code> - changed content, <code className="text-blue-400">{'{{trigger.content_hash}}'}</code> - SHA256 hash
+            </p>
           </div>
         </div>
       )}

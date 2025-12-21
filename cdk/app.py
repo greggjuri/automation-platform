@@ -56,12 +56,13 @@ execution_stack = ExecutionStack(
     env=env,
 )
 
-# Triggers (Cron Handler Lambda for EventBridge scheduled rules)
-# Created before API stack so we can pass cron_handler ARN
+# Triggers (Cron Handler and Poller Lambdas for EventBridge scheduled rules)
+# Created before API stack so we can pass handler ARNs
 triggers_stack = TriggersStack(
     app,
     f"{stack_prefix}-triggers",
     workflows_table=database_stack.workflows_table,
+    poll_state_table=database_stack.poll_state_table,
     execution_queue=execution_stack.execution_queue,
     environment=environment,
     env=env,
@@ -75,6 +76,7 @@ api_stack = ApiStack(
     executions_table=database_stack.executions_table,
     execution_queue=execution_stack.execution_queue,
     cron_handler_arn=triggers_stack.cron_handler.function_arn,
+    poller_arn=triggers_stack.poller.function_arn,
     environment=environment,
     env=env,
 )
