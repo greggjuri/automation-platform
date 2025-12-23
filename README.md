@@ -4,8 +4,7 @@ A personal event-driven automation platform for defining and executing workflows
 
 ## Live Demo
 
-- **Frontend:** https://automations.jurigregg.com
-- **API:** https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com
+**https://automations.jurigregg.com**
 
 Public visitors can view workflows and executions. Authentication required to create, edit, or delete.
 
