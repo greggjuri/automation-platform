@@ -3,15 +3,22 @@
  */
 
 import { useFormContext } from 'react-hook-form';
-import type { WorkflowFormData } from '../../../types';
+import type { WorkflowFormData, TriggerType, StepType } from '../../../types';
 import { KeyValueEditor } from '../KeyValueEditor';
 import { VariableHelper } from '../VariableHelper';
+
+interface PreviousStep {
+  name: string;
+  type: StepType;
+}
 
 interface HttpRequestConfigProps {
   /** Index of this step in the steps array */
   stepIndex: number;
-  /** Names of previous steps for variable helper */
-  previousStepNames: string[];
+  /** Current trigger type */
+  triggerType: TriggerType;
+  /** Previous steps with name and type */
+  previousSteps: PreviousStep[];
 }
 
 /**
@@ -19,7 +26,8 @@ interface HttpRequestConfigProps {
  */
 export function HttpRequestConfig({
   stepIndex,
-  previousStepNames,
+  triggerType,
+  previousSteps,
 }: HttpRequestConfigProps) {
   const { register, watch, setValue } = useFormContext<WorkflowFormData>();
 
@@ -94,7 +102,7 @@ export function HttpRequestConfig({
       )}
 
       {/* Variable Helper */}
-      <VariableHelper stepNames={previousStepNames} />
+      <VariableHelper triggerType={triggerType} previousSteps={previousSteps} />
     </div>
   );
 }

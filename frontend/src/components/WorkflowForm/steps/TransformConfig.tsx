@@ -3,14 +3,21 @@
  */
 
 import { useFormContext } from 'react-hook-form';
-import type { WorkflowFormData } from '../../../types';
+import type { WorkflowFormData, TriggerType, StepType } from '../../../types';
 import { VariableHelper } from '../VariableHelper';
+
+interface PreviousStep {
+  name: string;
+  type: StepType;
+}
 
 interface TransformConfigProps {
   /** Index of this step in the steps array */
   stepIndex: number;
-  /** Names of previous steps for variable helper */
-  previousStepNames: string[];
+  /** Current trigger type */
+  triggerType: TriggerType;
+  /** Previous steps with name and type */
+  previousSteps: PreviousStep[];
 }
 
 /**
@@ -18,7 +25,8 @@ interface TransformConfigProps {
  */
 export function TransformConfig({
   stepIndex,
-  previousStepNames,
+  triggerType,
+  previousSteps,
 }: TransformConfigProps) {
   const { register } = useFormContext<WorkflowFormData>();
 
@@ -60,7 +68,7 @@ export function TransformConfig({
       </div>
 
       {/* Variable Helper */}
-      <VariableHelper stepNames={previousStepNames} />
+      <VariableHelper triggerType={triggerType} previousSteps={previousSteps} />
     </div>
   );
 }

@@ -78,7 +78,7 @@
   - [x] EventBridge poll rule management in API
   - [x] Frontend TriggerConfig poll trigger UI
   - [x] Unit tests (25 tests)
-- [ ] VariableHelper enhancement (PRP-014): show trigger-specific fields, step outputs, click-to-copy
+- [x] VariableHelper enhancement (PRP-014): show trigger-specific fields, step outputs, click-to-copy
 - [ ] README.md and architecture docs
 - [ ] User guide (plain English, examples)
 - [ ] API reference documentation
@@ -121,6 +121,7 @@
 | PRP-012: Authentication | 2025-12-19 | Cognito setup scripts, frontend auth library, AuthProvider, LoginPage, ProtectedRoute, conditional UI for read-only public access |
 | Frontend build optimization | 2025-12-21 | Fixed CSS @import order warning, implemented lazy loading for routes to reduce bundle size (509KB → 402KB) |
 | PRP-013: Polling Trigger | 2025-12-21 | Poller Lambda (RSS/Atom/HTTP), CDK stack, EventBridge poll rules, frontend UI, 25 unit tests |
+| PRP-014: Variable Helper Enhancement | 2025-12-23 | Trigger-specific variables, step output hints by type, click-to-copy with toast, glass styling |
 
 ## Blockers
 

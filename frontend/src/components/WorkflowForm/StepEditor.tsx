@@ -5,7 +5,7 @@
  */
 
 import { useFormContext } from 'react-hook-form';
-import type { WorkflowFormData, StepType } from '../../types';
+import type { WorkflowFormData, StepType, TriggerType } from '../../types';
 import {
   HttpRequestConfig,
   TransformConfig,
@@ -13,13 +13,20 @@ import {
   NotifyConfig,
 } from './steps';
 
+interface PreviousStep {
+  name: string;
+  type: StepType;
+}
+
 interface StepEditorProps {
   /** Index of this step in the steps array */
   stepIndex: number;
   /** Total number of steps (for move buttons) */
   totalSteps: number;
-  /** Names of previous steps (for variable helper) */
-  previousStepNames: string[];
+  /** Current trigger type */
+  triggerType: TriggerType;
+  /** Previous steps with name and type */
+  previousSteps: PreviousStep[];
   /** Callback to move step up */
   onMoveUp: () => void;
   /** Callback to move step down */
@@ -41,7 +48,8 @@ const STEP_TYPE_LABELS: Record<StepType, string> = {
 export function StepEditor({
   stepIndex,
   totalSteps,
-  previousStepNames,
+  triggerType,
+  previousSteps,
   onMoveUp,
   onMoveDown,
   onDelete,
@@ -51,7 +59,7 @@ export function StepEditor({
   const stepType = watch(`steps.${stepIndex}.type`) as StepType;
 
   const renderConfig = () => {
-    const props = { stepIndex, previousStepNames };
+    const props = { stepIndex, triggerType, previousSteps };
 
     switch (stepType) {
       case 'http_request':

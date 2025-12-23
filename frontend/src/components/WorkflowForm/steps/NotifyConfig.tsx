@@ -3,14 +3,21 @@
  */
 
 import { useFormContext } from 'react-hook-form';
-import type { WorkflowFormData } from '../../../types';
+import type { WorkflowFormData, TriggerType, StepType } from '../../../types';
 import { VariableHelper } from '../VariableHelper';
+
+interface PreviousStep {
+  name: string;
+  type: StepType;
+}
 
 interface NotifyConfigProps {
   /** Index of this step in the steps array */
   stepIndex: number;
-  /** Names of previous steps for variable helper */
-  previousStepNames: string[];
+  /** Current trigger type */
+  triggerType: TriggerType;
+  /** Previous steps with name and type */
+  previousSteps: PreviousStep[];
 }
 
 /**
@@ -18,7 +25,8 @@ interface NotifyConfigProps {
  */
 export function NotifyConfig({
   stepIndex,
-  previousStepNames,
+  triggerType,
+  previousSteps,
 }: NotifyConfigProps) {
   const { register, watch } = useFormContext<WorkflowFormData>();
 
@@ -92,7 +100,7 @@ export function NotifyConfig({
       )}
 
       {/* Variable Helper */}
-      <VariableHelper stepNames={previousStepNames} />
+      <VariableHelper triggerType={triggerType} previousSteps={previousSteps} />
     </div>
   );
 }

@@ -3,8 +3,13 @@
  */
 
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import type { WorkflowFormData, StepFormData } from '../../types';
+import type { WorkflowFormData, StepFormData, TriggerType, StepType } from '../../types';
 import { StepEditor } from './StepEditor';
+
+interface PreviousStep {
+  name: string;
+  type: StepType;
+}
 
 /**
  * Generate a unique step ID.
@@ -45,6 +50,7 @@ export function StepList() {
   });
 
   const steps = watch('steps') || [];
+  const triggerType = watch('trigger.type') as TriggerType;
 
   const handleAddStep = () => {
     const newStep: StepFormData = {
@@ -68,8 +74,11 @@ export function StepList() {
     }
   };
 
-  const getPreviousStepNames = (currentIndex: number): string[] => {
-    return steps.slice(0, currentIndex).map((s) => s.name || '');
+  const getPreviousSteps = (currentIndex: number): PreviousStep[] => {
+    return steps.slice(0, currentIndex).map((s) => ({
+      name: s.name || '',
+      type: s.type,
+    }));
   };
 
   return (
@@ -101,7 +110,8 @@ export function StepList() {
                 key={field.id}
                 stepIndex={index}
                 totalSteps={fields.length}
-                previousStepNames={getPreviousStepNames(index)}
+                triggerType={triggerType}
+                previousSteps={getPreviousSteps(index)}
                 onMoveUp={() => handleMoveUp(index)}
                 onMoveDown={() => handleMoveDown(index)}
                 onDelete={() => remove(index)}

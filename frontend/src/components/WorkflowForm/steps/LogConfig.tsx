@@ -3,20 +3,27 @@
  */
 
 import { useFormContext } from 'react-hook-form';
-import type { WorkflowFormData } from '../../../types';
+import type { WorkflowFormData, TriggerType, StepType } from '../../../types';
 import { VariableHelper } from '../VariableHelper';
+
+interface PreviousStep {
+  name: string;
+  type: StepType;
+}
 
 interface LogConfigProps {
   /** Index of this step in the steps array */
   stepIndex: number;
-  /** Names of previous steps for variable helper */
-  previousStepNames: string[];
+  /** Current trigger type */
+  triggerType: TriggerType;
+  /** Previous steps with name and type */
+  previousSteps: PreviousStep[];
 }
 
 /**
  * Form fields for configuring a log step.
  */
-export function LogConfig({ stepIndex, previousStepNames }: LogConfigProps) {
+export function LogConfig({ stepIndex, triggerType, previousSteps }: LogConfigProps) {
   const { register } = useFormContext<WorkflowFormData>();
 
   return (
@@ -53,7 +60,7 @@ export function LogConfig({ stepIndex, previousStepNames }: LogConfigProps) {
       </div>
 
       {/* Variable Helper */}
-      <VariableHelper stepNames={previousStepNames} />
+      <VariableHelper triggerType={triggerType} previousSteps={previousSteps} />
     </div>
   );
 }
