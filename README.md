@@ -42,7 +42,7 @@ See [docs/PLANNING.md](docs/PLANNING.md) for detailed architecture.
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/automation-platform.git
+git clone https://github.com/greggjuri/automation-platform.git
 cd automation-platform
 
 # Set up Python environment
