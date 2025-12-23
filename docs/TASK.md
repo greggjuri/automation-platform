@@ -78,7 +78,7 @@
   - [x] EventBridge poll rule management in API
   - [x] Frontend TriggerConfig poll trigger UI
   - [x] Unit tests (25 tests)
-- [ ] VariableHelper: show trigger-specific fields (webhook: payload/headers, cron: scheduled_time)
+- [ ] VariableHelper enhancement (PRP-014): show trigger-specific fields, step outputs, click-to-copy
 - [ ] README.md and architecture docs
 - [ ] User guide (plain English, examples)
 - [ ] API reference documentation
