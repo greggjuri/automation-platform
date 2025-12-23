@@ -79,8 +79,8 @@
   - [x] Frontend TriggerConfig poll trigger UI
   - [x] Unit tests (25 tests)
 - [x] VariableHelper enhancement (PRP-014): show trigger-specific fields, step outputs, click-to-copy
-- [ ] README.md and architecture docs
-- [ ] User guide (plain English, examples)
+- [x] README.md and architecture docs
+- [x] User guide (plain English, examples)
 - [ ] API reference documentation
 
 ### Cleanup
@@ -122,6 +122,7 @@
 | Frontend build optimization | 2025-12-21 | Fixed CSS @import order warning, implemented lazy loading for routes to reduce bundle size (509KB → 402KB) |
 | PRP-013: Polling Trigger | 2025-12-21 | Poller Lambda (RSS/Atom/HTTP), CDK stack, EventBridge poll rules, frontend UI, 25 unit tests |
 | PRP-014: Variable Helper Enhancement | 2025-12-23 | Trigger-specific variables, step output hints by type, click-to-copy with toast, glass styling |
+| User Guide Documentation | 2025-12-23 | Comprehensive USER_GUIDE.md with quick start, detailed docs, examples, and troubleshooting |
 
 ## Blockers
 
