@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 import boto3
@@ -52,6 +53,29 @@ ssm_client = boto3.client("ssm")
 _secrets_cache: dict[str, Any] = {}
 _secrets_cache_time: float = 0
 SECRETS_CACHE_TTL = 300  # 5 minutes
+
+
+def convert_decimals(obj: Any) -> Any:
+    """Recursively convert Decimal types to int/float for JSON serialization.
+
+    DynamoDB returns Decimal for all numeric types. This function converts them
+    to native Python types that json.dumps can serialize.
+
+    Args:
+        obj: Any object that may contain Decimal values
+
+    Returns:
+        Object with Decimals converted to int (if whole number) or float
+    """
+    if isinstance(obj, Decimal):
+        if obj % 1 == 0:
+            return int(obj)
+        return float(obj)
+    if isinstance(obj, dict):
+        return {k: convert_decimals(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [convert_decimals(item) for item in obj]
+    return obj
 
 
 # -----------------------------------------------------------------------------
@@ -439,7 +463,7 @@ def process_record(record: SQSRecord) -> None:
         sfn_response = sfn_client.start_sync_execution(
             stateMachineArn=STATE_MACHINE_ARN,
             name=execution_id,
-            input=json.dumps(sfn_input),
+            input=json.dumps(convert_decimals(sfn_input)),
         )
 
         # Check execution status and parse results
