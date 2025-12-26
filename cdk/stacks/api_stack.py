@@ -3,8 +3,9 @@
 Creates:
 - Lambda function for API handling
 - Webhook Receiver Lambda for external webhooks
+- Cost Lambda for AWS cost reporting
 - HTTP API Gateway with CORS
-- Routes for workflow CRUD, execution, and webhook operations
+- Routes for workflow CRUD, execution, webhook, and internal operations
 - CloudWatch log groups
 """
 
@@ -31,6 +32,7 @@ class ApiStack(Stack):
         api: The HTTP API Gateway
         api_handler: The Lambda function handling API requests
         webhook_receiver: The Lambda function handling webhook requests
+        cost_handler: The Lambda function handling AWS cost queries
         api_url: The API endpoint URL
     """
 
@@ -72,6 +74,7 @@ class ApiStack(Stack):
         # Create Lambda functions
         self._create_lambda(workflows_table)
         self._create_webhook_receiver()
+        self._create_cost_lambda()
 
         # Create HTTP API Gateway
         self._create_api_gateway()
@@ -259,6 +262,61 @@ class ApiStack(Stack):
         if self.execution_queue:
             self.execution_queue.grant_send_messages(self.webhook_receiver)
 
+    def _create_cost_lambda(self) -> None:
+        """Create the Cost API Lambda function for AWS cost reporting."""
+        function_name = f"{self.env_name}-automation-cost-handler"
+
+        # Create log group
+        log_group = logs.LogGroup(
+            self,
+            "CostHandlerLogs",
+            log_group_name=f"/aws/lambda/{function_name}",
+            retention=logs.RetentionDays.TWO_WEEKS,
+            removal_policy=RemovalPolicy.DESTROY,
+        )
+
+        # Environment variables
+        env_vars = {
+            "ENVIRONMENT": self.env_name,
+            "POWERTOOLS_SERVICE_NAME": "cost-api",
+            "POWERTOOLS_LOG_LEVEL": "INFO" if self.env_name == "prod" else "DEBUG",
+        }
+
+        # Lambda function for cost API
+        self.cost_handler = lambda_.Function(
+            self,
+            "CostHandler",
+            function_name=function_name,
+            description="Returns current month AWS cost summary from Cost Explorer",
+            runtime=lambda_.Runtime.PYTHON_3_11,
+            handler="handler.handler",
+            code=lambda_.Code.from_asset(
+                path=os.path.join(LAMBDAS_DIR, "cost"),
+                bundling=BundlingOptions(
+                    image=lambda_.Runtime.PYTHON_3_11.bundling_image,
+                    command=[
+                        "bash",
+                        "-c",
+                        "pip install -r requirements.txt -t /asset-output && cp -r . /asset-output",
+                    ],
+                ),
+            ),
+            memory_size=128,
+            timeout=Duration.seconds(10),  # Cost Explorer can be slow
+            environment=env_vars,
+            log_group=log_group,
+            tracing=lambda_.Tracing.ACTIVE,
+        )
+
+        # Grant Cost Explorer read permission
+        # Note: Cost Explorer doesn't support resource-level permissions
+        self.cost_handler.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["ce:GetCostAndUsage"],
+                resources=["*"],
+            )
+        )
+
     def _create_api_gateway(self) -> None:
         """Create the HTTP API Gateway with routes."""
         # Determine CORS origins based on environment
@@ -384,4 +442,20 @@ class ApiStack(Stack):
             path="/secrets/{name}",
             methods=[apigwv2.HttpMethod.DELETE],
             integration=api_integration,
+        )
+
+        # ---------------------------------------------------------------------
+        # Internal Routes (separate Lambdas)
+        # ---------------------------------------------------------------------
+
+        # Cost API - GET /internal/aws-cost
+        cost_integration = integrations.HttpLambdaIntegration(
+            "CostIntegration",
+            handler=self.cost_handler,
+        )
+
+        self.api.add_routes(
+            path="/internal/aws-cost",
+            methods=[apigwv2.HttpMethod.GET],
+            integration=cost_integration,
         )
