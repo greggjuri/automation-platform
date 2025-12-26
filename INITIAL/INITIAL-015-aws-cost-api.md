@@ -59,19 +59,13 @@ steps:
       method: GET
       url: "https://vrcejkbiu4.execute-api.us-east-1.amazonaws.com/internal/aws-cost"
   
-  - name: format_message
-    type: transform
-    config:
-      expression: |
-        "**AWS Cost Report**\n" +
-        "Period: " + steps.fetch_cost.output.body.period.start + " to " + steps.fetch_cost.output.body.period.end + "\n" +
-        "**Total: $" + steps.fetch_cost.output.body.total_cost + " " + steps.fetch_cost.output.body.currency + "**"
-  
   - name: notify_discord
     type: notify
     config:
       webhook_url: "{{secrets.discord_webhook}}"
-      message: "{{steps.format_message.output.result}}"
+      message: "**AWS Cost Report**
+                Period: {{steps.fetch_cost.output.body.period.start}} to {{steps.fetch_cost.output.body.period.end}}
+                **Total: ${{steps.fetch_cost.output.body.total_cost}} {{steps.fetch_cost.output.body.currency}}**"
 ```
 
 ## Success Criteria
