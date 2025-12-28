@@ -63,9 +63,11 @@ def create_schedule_rule(workflow_id: str, schedule: str) -> None:
     )
 
     # Create/update rule
+    # EventBridge requires cron expressions wrapped in cron()
+    schedule_expression = f"cron({schedule})"
     events_client.put_rule(
         Name=rule_name,
-        ScheduleExpression=schedule,
+        ScheduleExpression=schedule_expression,
         State="ENABLED",
         Description=f"Cron trigger for workflow {workflow_id}",
     )
