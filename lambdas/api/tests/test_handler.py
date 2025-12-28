@@ -83,8 +83,14 @@ class TestDeleteWorkflow:
     """Tests for DELETE /workflows/{id} endpoint."""
 
     @patch("handler.delete_workflow")
-    def test_delete_existing(self, mock_delete):
+    @patch("handler.get_workflow")
+    def test_delete_existing(self, mock_get, mock_delete):
         """Test deleting an existing workflow."""
+        mock_get.return_value = {
+            "workflow_id": "wf_test123",
+            "name": "Test Workflow",
+            "trigger": {"type": "webhook"},
+        }
         mock_delete.return_value = True
 
         from handler import delete_workflow_handler
@@ -96,11 +102,12 @@ class TestDeleteWorkflow:
         mock_delete.assert_called_once_with("wf_test123")
 
     @patch("handler.delete_workflow")
-    def test_delete_not_found(self, mock_delete):
+    @patch("handler.get_workflow")
+    def test_delete_not_found(self, mock_get, mock_delete):
         """Test deleting a non-existent workflow."""
         from aws_lambda_powertools.event_handler.exceptions import NotFoundError
 
-        mock_delete.return_value = False
+        mock_get.return_value = None
 
         from handler import delete_workflow_handler
 

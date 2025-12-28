@@ -94,7 +94,7 @@ class TestToggleWorkflowEnabled:
 
         assert "enabled" in str(exc_info.value).lower()
 
-    @patch("handler.disable_schedule_rule")
+    @patch("eventbridge.disable_schedule_rule")
     @patch("handler.update_workflow")
     @patch("handler.get_workflow")
     @patch("handler.app")
@@ -119,7 +119,7 @@ class TestToggleWorkflowEnabled:
         assert response["enabled"] is False
         mock_disable.assert_called_once_with("wf_cron123")
 
-    @patch("handler.enable_schedule_rule")
+    @patch("eventbridge.enable_schedule_rule")
     @patch("handler.update_workflow")
     @patch("handler.get_workflow")
     @patch("handler.app")
@@ -144,8 +144,8 @@ class TestToggleWorkflowEnabled:
         assert response["enabled"] is True
         mock_enable.assert_called_once_with("wf_cron123")
 
-    @patch("handler.enable_schedule_rule")
-    @patch("handler.disable_schedule_rule")
+    @patch("eventbridge.enable_schedule_rule")
+    @patch("eventbridge.disable_schedule_rule")
     @patch("handler.update_workflow")
     @patch("handler.get_workflow")
     @patch("handler.app")

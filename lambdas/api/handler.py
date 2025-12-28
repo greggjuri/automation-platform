@@ -29,6 +29,8 @@ from models import (
 from eventbridge import (
     delete_poll_rule,
     delete_schedule_rule,
+    disable_schedule_rule,
+    enable_schedule_rule,
     sync_workflow_enabled,
     sync_workflow_rule,
 )
