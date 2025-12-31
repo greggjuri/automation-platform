@@ -60,6 +60,7 @@ const STEP_OUTPUT_HINTS: Record<StepType, string[]> = {
   transform: ['output'],
   log: [], // No meaningful output
   notify: ['output.status_code'],
+  claude: ['output.response', 'output.usage.input_tokens', 'output.usage.output_tokens'],
 };
 
 /** Trigger type display names */

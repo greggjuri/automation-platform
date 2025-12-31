@@ -86,6 +86,11 @@
   - [x] Cost Lambda for AWS Cost Explorer integration
   - [x] GET /internal/aws-cost endpoint
   - [x] Unit tests (17 tests)
+- [x] Claude AI action type (PRP-016)
+  - [x] Claude action Lambda with Anthropic API integration
+  - [x] CDK execution stack updates
+  - [x] Frontend ClaudeConfig component
+  - [x] Unit tests (16 tests)
 
 ### Cleanup
 - [x] Delete or .gitignore examples/auth/ files after PRP-012 implementation
@@ -128,6 +133,7 @@
 | PRP-014: Variable Helper Enhancement | 2025-12-23 | Trigger-specific variables, step output hints by type, click-to-copy with toast, glass styling |
 | User Guide Documentation | 2025-12-23 | Comprehensive USER_GUIDE.md with quick start, detailed docs, examples, and troubleshooting |
 | PRP-015: AWS Cost API | 2025-12-26 | Cost Lambda, GET /internal/aws-cost endpoint, CDK updates, 17 unit tests |
+| PRP-016: Claude AI Action | 2025-12-31 | Claude action Lambda, CDK execution stack, ClaudeConfig component, 16 unit tests |
 
 ## Blockers
 

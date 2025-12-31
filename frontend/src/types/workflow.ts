@@ -8,7 +8,7 @@
 export type TriggerType = 'manual' | 'webhook' | 'cron' | 'poll';
 
 /** Step action types */
-export type StepType = 'http_request' | 'transform' | 'log' | 'notify';
+export type StepType = 'http_request' | 'transform' | 'log' | 'notify' | 'claude';
 
 /**
  * Workflow trigger configuration.
@@ -97,7 +97,7 @@ export interface StepFormData {
   step_id: string;
   name: string;
   type: StepType;
-  config: HttpRequestConfig | TransformConfig | LogConfig | NotifyConfig;
+  config: HttpRequestConfig | TransformConfig | LogConfig | NotifyConfig | ClaudeConfig;
 }
 
 /** HTTP Request step config */
@@ -126,4 +126,13 @@ export interface NotifyConfig {
   webhook_url: string;
   message: string;
   embed?: boolean;
+}
+
+/** Claude AI step config */
+export interface ClaudeConfig {
+  model: 'claude-3-haiku-20240307' | 'claude-3-5-sonnet-20241022' | 'claude-3-5-haiku-20241022';
+  max_tokens: number;
+  prompt: string;
+  api_key_secret?: string;
+  truncate_input?: number;
 }

@@ -4,7 +4,7 @@ Creates:
 - SQS execution queue and DLQ
 - Step Functions Express state machine
 - Execution Starter Lambda (SQS consumer)
-- Action Lambdas (HTTP Request, Transform, Log, Notify)
+- Action Lambdas (HTTP Request, Transform, Log, Notify, Claude)
 """
 
 import os
@@ -242,6 +242,18 @@ class ExecutionStack(Stack):
         )
         self.executions_table.grant_read_write_data(self.notify_lambda)
 
+        # Claude AI action
+        self.claude_lambda = self._create_lambda_with_logs(
+            id_suffix="action-claude",
+            description="Calls Claude AI API for intelligent text processing",
+            code_path="action_claude",
+            timeout_seconds=30,  # Allow time for API calls
+            environment={
+                "EXECUTIONS_TABLE_NAME": self.executions_table.table_name,
+            },
+        )
+        self.executions_table.grant_read_write_data(self.claude_lambda)
+
     def _create_state_machine(self) -> None:
         """Create Step Functions Express state machine.
 
@@ -316,6 +328,15 @@ class ExecutionStack(Stack):
             payload_response_only=True,
         )
 
+        # Claude AI action task
+        claude_task = tasks.LambdaInvoke(
+            self,
+            "ExecuteClaude",
+            lambda_function=self.claude_lambda,
+            result_path="$.step_result",
+            payload_response_only=True,
+        )
+
         # Skip unknown step types
         skip_unknown = sfn.Pass(
             self,
@@ -346,6 +367,10 @@ class ExecutionStack(Stack):
         route_by_type.when(
             sfn.Condition.string_equals("$.step.type", "notify"),
             notify_task,
+        )
+        route_by_type.when(
+            sfn.Condition.string_equals("$.step.type", "claude"),
+            claude_task,
         )
         route_by_type.otherwise(skip_unknown)
 
@@ -390,6 +415,7 @@ class ExecutionStack(Stack):
         transform_task.next(check_step_result)
         log_task.next(check_step_result)
         notify_task.next(check_step_result)
+        claude_task.next(check_step_result)
         skip_unknown.next(check_step_result)
 
         # Check if more steps to process

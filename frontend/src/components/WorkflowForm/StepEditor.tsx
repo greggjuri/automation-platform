@@ -11,6 +11,7 @@ import {
   TransformConfig,
   LogConfig,
   NotifyConfig,
+  ClaudeConfig,
 } from './steps';
 
 interface PreviousStep {
@@ -40,6 +41,7 @@ const STEP_TYPE_LABELS: Record<StepType, string> = {
   transform: 'Transform',
   log: 'Log',
   notify: 'Notify',
+  claude: 'Claude AI',
 };
 
 /**
@@ -70,6 +72,8 @@ export function StepEditor({
         return <LogConfig {...props} />;
       case 'notify':
         return <NotifyConfig {...props} />;
+      case 'claude':
+        return <ClaudeConfig {...props} />;
       default:
         return null;
     }
