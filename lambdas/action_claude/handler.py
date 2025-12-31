@@ -56,11 +56,11 @@ def execute_claude(config: dict, context: dict) -> dict[str, Any]:
         APIError: If Anthropic API returns an error
     """
     # Get configuration with defaults
-    model = config.get("model", DEFAULT_MODEL)
-    max_tokens = config.get("max_tokens", DEFAULT_MAX_TOKENS)
+    model = config.get("model") or DEFAULT_MODEL
+    max_tokens = config.get("max_tokens") or DEFAULT_MAX_TOKENS
     prompt_template = config.get("prompt", "")
-    api_key_secret = config.get("api_key_secret", DEFAULT_API_KEY_SECRET)
-    truncate_limit = config.get("truncate_input", DEFAULT_TRUNCATE_INPUT)
+    api_key_secret = config.get("api_key_secret") or DEFAULT_API_KEY_SECRET
+    truncate_limit = config.get("truncate_input") or DEFAULT_TRUNCATE_INPUT
 
     # Validate model
     if model not in ALLOWED_MODELS:
